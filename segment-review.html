@@ -10,15 +10,39 @@
 <body>
   <div id="app">
     <div class="layout">
-      
+
     <aside class="sidebar">
       <div class="brand">裁判文书标注平台</div>
       <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
                default-active="segment-review.html" style="border-right:none;">
-        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" class="is-active" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+        <el-menu-item-group title="总览">
+          <el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="任务">
+          <el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item>
+          <el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item>
+          <el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="标注">
+          <el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item>
+          <el-menu-item index="segment-review.html" class="is-active" @click="go('segment-review.html')">切割复核</el-menu-item>
+          <el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item>
+          <el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="裁定">
+          <el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item>
+          <el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="输出">
+          <el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="管理">
+          <el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item>
+          <el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item>
+        </el-menu-item-group>
       </el-menu>
     </aside>
-      
+
     <div class="main">
       <div class="topbar">
         <div class="title">{{ pageTitle }}</div>
@@ -35,30 +59,66 @@
       <div class="content">
 
         <h2 class="page-title">切割复核</h2>
-        <p class="page-desc">裁定者比对多名标注员的切割版本，确定统一切割方案</p>
+        <p class="page-desc">裁定者比对多名标注员的切割版本，逐段采纳或重切，确定统一切割方案</p>
+
+        <!-- 一致性统计 -->
+        <div class="stat-row" style="margin-bottom:16px">
+          <div class="stat-card"><div class="num">{{ rows.length }}</div><div class="label">比对命题数</div></div>
+          <div class="stat-card"><div class="num">{{ sameCount }}</div><div class="label">一致段数</div></div>
+          <div class="stat-card"><div class="num">{{ diffCount }}</div><div class="label">差异段数</div></div>
+          <div class="stat-card" style="flex:1.5">
+            <div style="font-size:13px; color:#606266; margin-bottom:6px">一致性 {{ consistency }}%（定稿阈值 80%）</div>
+            <el-progress :percentage="consistency" :color="consistency>=80 ? '#67c23a' : '#e6a23c'" :stroke-width="14"></el-progress>
+          </div>
+        </div>
+
         <div class="card">
-          <el-table :data="rows" border style="width:100%">
+          <el-table :data="rows" border size="small" style="width:100%">
             <el-table-column prop="idx" label="序号" width="70"></el-table-column>
-            <el-table-column prop="a" label="标注员 A" min-width="200"></el-table-column>
-            <el-table-column prop="b" label="标注员 B" min-width="200"></el-table-column>
-            <el-table-column label="一致性" width="90">
+            <el-table-column prop="a" label="标注员 A 切割" min-width="210">
+              <template #default="s"><span :class="s.row.same ? '' : 'diff-text'">{{ s.row.a }}</span></template>
+            </el-table-column>
+            <el-table-column prop="b" label="标注员 B 切割" min-width="210">
+              <template #default="s"><span :class="s.row.same ? '' : 'diff-text'">{{ s.row.b }}</span></template>
+            </el-table-column>
+            <el-table-column label="一致性" width="86" align="center">
               <template #default="s">
-                <el-tag size="small" :type="s.row.same?'success':'warning'">{{ s.row.same?'一致':'差异' }}</el-tag>
+                <el-tag size="small" :type="s.row.same ? 'success' : 'warning'">{{ s.row.same ? '一致' : '差异' }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="裁定" width="120">
+            <el-table-column label="裁定采纳" width="190">
               <template #default="s">
-                <el-radio-group v-model="s.row.pick" size="small">
-                  <el-radio-button label="A">A</el-radio-button>
-                  <el-radio-button label="B">B</el-radio-button>
+                <el-radio-group v-model="s.row.pick" size="small" @change="onPick(s.row)">
+                  <el-radio-button value="A">采纳 A</el-radio-button>
+                  <el-radio-button value="B">采纳 B</el-radio-button>
+                  <el-radio-button value="R">重切</el-radio-button>
                 </el-radio-group>
               </template>
             </el-table-column>
+            <el-table-column label="最终切割" min-width="210">
+              <template #default="s">
+                <el-input v-if="s.row.pick==='R'" v-model="s.row.final" size="small" placeholder="人工重切并填写"></el-input>
+                <span v-else style="font-size:13px">{{ finalOf(s.row) }}</span>
+              </template>
+            </el-table-column>
           </el-table>
-          <div style="margin-top:12px"><el-button type="success">确认切割定稿</el-button></div>
-          <span class="proto-note">切割定稿后，标注员在此基础上进行要素标注（命题/关系）</span>
+          <div style="margin-top:14px; display:flex; gap:12px; align-items:center;">
+            <el-button type="success" :disabled="diffCount > 0 && hasUnresolved" @click="confirm">确认切割定稿</el-button>
+            <el-button size="small" @click="revertDiffs">差异段全部采纳 A</el-button>
+            <span style="color:#909399; font-size:12px">存在「重切」且未填写内容的差异段时，不可定稿</span>
+          </div>
+          <div style="margin-top:12px">
+            <span class="proto-note">切割定稿后，标注员在此基础上进行要素标注（命题 / 关系）</span>
+          </div>
         </div>
+
+        <div class="card">
+          <span class="proto-note">一致性阈值 80% 是否作为自动定稿标准，需与老师确认</span>
+          <span class="proto-note">差异段序号自动对齐方式（最长公共子序列 / 人工对齐）待确认（Q 差异识别方式）</span>
+        </div>
+
       </div>
+    </div>
     </div>
   </div>
   <script src="assets/vendor/vue.global.prod.js"></script>
@@ -69,23 +129,45 @@
       data() {
         return {
           pageTitle: '切割复核',
-          role: 'annotator',
-          
-            rows: [
-              { idx:'P1', a:'依法成立的合同，自成立时生效。', b:'依法成立的合同，自成立时生效。', same:true, pick:'A' },
-              { idx:'P2', a:'当事人应当按照约定全面履行自己的义务。', b:'当事人应当按照约定全面履行自己的义务。', same:true, pick:'A' },
-              { idx:'P3', a:'当事人一方未支付价款、报酬、租金、利息…的，对方可以请求其支付。', b:'当事人一方未支付价款、报酬…的，对方可以请求其支付。', same:false, pick:'A' },
-            ],
-
+          role: 'arbitrator',
+          rows: [
+            { idx:'P1', a:'依法成立的合同，自成立时生效。', b:'依法成立的合同，自成立时生效。', same:true,  pick:'A', final:'' },
+            { idx:'P2', a:'当事人应当按照约定全面履行自己的义务。', b:'当事人应当按照约定全面履行自己的义务。', same:true,  pick:'A', final:'' },
+            { idx:'P3', a:'当事人一方未支付价款、报酬、租金、利息…的，对方可以请求其支付。', b:'当事人一方未支付价款、报酬…的，对方可以请求其支付。', same:false, pick:'A', final:'' },
+            { idx:'P4', a:'本案中，原、被告之间系劳务合同关系，', b:'本案中，原、被告之间系劳务合同关系', same:false, pick:'R', final:'' },
+            { idx:'P5', a:'原告已依约提供劳务，', b:'原告已依约提供劳务，', same:true,  pick:'A', final:'' },
+          ],
         };
+      },
+      computed: {
+        sameCount() { return this.rows.filter(r => r.same).length; },
+        diffCount() { return this.rows.filter(r => !r.same).length; },
+        consistency() {
+          if (!this.rows.length) return 0;
+          return Math.round(this.sameCount / this.rows.length * 100);
+        },
+        hasUnresolved() {
+          return this.rows.some(r => r.pick === 'R' && !(r.final || '').trim());
+        },
       },
       methods: {
         go(p) { location.href = p; },
         logout() { location.href = 'index.html'; },
-        
+        finalOf(row) { return row.pick === 'A' ? row.a : row.pick === 'B' ? row.b : (row.final || ''); },
+        onPick(row) { /* 切到重切时聚焦输入由用户填写 */ },
+        revertDiffs() {
+          this.rows.forEach(r => { if (!r.same) r.pick = 'A'; });
+          this.$message.success('差异段已全部采纳标注员 A 的切割');
+        },
+        confirm() {
+          this.$message.success('切割已定稿，标注员可在此基础上进行命题 / 关系标注');
+        },
       }
     };
     createApp(App).use(ElementPlus).mount('#app');
   </script>
+  <style>
+    .diff-text { color: #e6a23c; text-decoration: underline wavy #e6a23c; text-underline-offset: 3px; }
+  </style>
 </body>
 </html>
