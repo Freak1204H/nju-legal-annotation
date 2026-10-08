@@ -65,20 +65,24 @@ prototype/
 - **`⚠ 待确认`**（橙色虚线框）：设计上有待与老师/业务方确认的点；
 - **`✗ 缺口`**（红色虚线框）：对照四条业务需求后确认缺失的功能。
 
-## 六、整合到 GitHub（小组协作）
+## 六、小组协作
+
+**仓库地址**：https://github.com/Freak1204H/nju-legal-annotation
+
+完整的分工 + 命令步骤见同目录 [协作说明.md](协作说明.md)。简版流程：
 
 ```bash
-# 在 prototype/ 目录下初始化仓库
-cd prototype
-git init
-git add .
-git commit -m "法律论证标注系统 HTML 高保真原型初版"
-
-# 推送到小组仓库（先在 GitHub 建好空仓库）
-git remote add origin https://github.com/<组名>/<仓库名>.git
-git branch -M main
-git push -u origin main
+git clone https://github.com/Freak1204H/nju-legal-annotation.git
+cd nju-legal-annotation
+git checkout -b member-你的名字     # 开自己的分支
+# ... 改自己负责的页面 ...
+git add <你改的文件>
+git commit -m "成员X：改了什么"
+git push -u origin member-你的名字  # 推自己分支
+# 上 GitHub 网页发 Pull Request 合并进 main
 ```
+
+> 国内网络建议给 git 配代理，否则会 `Connection reset`，见 [协作说明.md](协作说明.md) 第 3 节。
 
 推送后，可在 GitHub 仓库 Settings → Pages 开启 GitHub Pages（选 main 分支根目录），
 得到一个可在线访问、可发给老师点击的网址，替代本机双击打开。
