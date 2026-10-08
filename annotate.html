@@ -10,15 +10,39 @@
 <body>
   <div id="app">
     <div class="layout">
-      
+
     <aside class="sidebar">
       <div class="brand">裁判文书标注平台</div>
       <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
                default-active="annotate.html" style="border-right:none;">
-        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" class="is-active" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+        <el-menu-item-group title="总览">
+          <el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="任务">
+          <el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item>
+          <el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item>
+          <el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="标注">
+          <el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item>
+          <el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item>
+          <el-menu-item index="annotate.html" class="is-active" @click="go('annotate.html')">标注工作台</el-menu-item>
+          <el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="裁定">
+          <el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item>
+          <el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="输出">
+          <el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="管理">
+          <el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item>
+          <el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item>
+        </el-menu-item-group>
       </el-menu>
     </aside>
-      
+
     <div class="main">
       <div class="topbar">
         <div class="title">{{ pageTitle }}</div>
@@ -35,119 +59,379 @@
       <div class="content">
 
         <h2 class="page-title">标注工作台</h2>
-        <p class="page-desc">三栏布局：左=原文+命题列表 · 中=操作区 · 右=论证图示（双向联动）</p>
-        <div style="display:flex; gap:12px; height:calc(100vh - 180px);">
+        <p class="page-desc">三栏布局：左=原文+命题列表 · 中=标签/关系操作区 · 右=论证图示（双向联动）</p>
+
+        <div style="display:flex; gap:12px; height:calc(100vh - 190px);">
+
           <!-- 左栏：原文 + 命题列表 -->
-          <div style="flex:1.2; display:flex; flex-direction:column; gap:12px; min-width:0;">
-            <div class="card" style="flex:1; overflow:auto; margin-bottom:0;">
-              <h4 style="margin:0 0 8px">原文（裁判理由）</h4>
+          <div style="flex:1.25; display:flex; flex-direction:column; gap:12px; min-width:0;">
+            <div class="card" style="flex:1; overflow:auto; margin-bottom:0; padding:14px;">
+              <h4 style="margin:0 0 8px">原文（裁判理由 · 已切割）</h4>
               <p style="line-height:2; font-size:13px; color:#303133; margin:0">
-                <template v-for="(seg,i) in segments" :key="i">
-                  <span :style="sel===i?'background:#ffd666;padding:2px 1px;border-radius:3px':''" @click="sel=i">{{ seg }}</span>
-                </template>
+                <span v-for="(seg,i) in segments" :key="i"
+                      @click="selSeg = i"
+                      :style="selSeg===i ? 'background:#ffd666;padding:2px 2px;border-radius:3px;cursor:pointer;' : 'cursor:pointer;'"
+                      :title="'点击选中该段 → 新建命题'">{{ seg.text }}</span>
               </p>
-              <div style="margin-top:10px"><el-button size="small" @click="newProp">新建命题（先选文本再选标签）</el-button></div>
+              <div style="margin-top:10px">
+                <el-button size="small" type="primary" @click="newProp">＋ 新建命题（先选文本再补标签）</el-button>
+              </div>
             </div>
-            <div class="card" style="flex:1; overflow:auto; margin-bottom:0;">
-              <h4 style="margin:0 0 8px">命题列表</h4>
-              <el-table :data="props" border size="small" style="width:100%">
-                <el-table-column prop="idx" label="#" width="50"></el-table-column>
-                <el-table-column prop="text" label="命题内容" min-width="160"></el-table-column>
-                <el-table-column prop="tag" label="标签" width="90">
-                  <template #default="s"><el-tag size="small" :type="tagType(s.row.tag)">{{ s.row.tag }}</el-tag></template>
+            <div class="card" style="flex:1.2; overflow:auto; margin-bottom:0; padding:14px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                <h4 style="margin:0">命题列表</h4>
+                <span style="font-size:12px; color:#909399">点击行 → 在中间栏补标签</span>
+              </div>
+              <el-table :data="props" border size="small" style="width:100%" highlight-current-row
+                        @current-change="onRowSelect">
+                <el-table-column label="#" width="44">
+                  <template #default="s">{{ s.$index + 1 }}</template>
                 </el-table-column>
-                <el-table-column label="操作" width="80">
-                  <template #default="s"><el-button size="small" type="text" @click="delProp(s.$index)">删除</el-button></template>
+                <el-table-column prop="text" label="命题内容" min-width="140" show-overflow-tooltip></el-table-column>
+                <el-table-column label="标签" width="108">
+                  <template #default="s">
+                    <el-tag size="small" :type="tagType(s.row.tag1)">{{ tagText(s.row) }}</el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" width="86">
+                  <template #default="s">
+                    <el-button size="mini" text type="primary" @click.stop="mergeUp(s.$index)">合并</el-button>
+                    <el-button size="mini" text type="danger" @click.stop="delProp(s.$index)">删除</el-button>
+                  </template>
                 </el-table-column>
               </el-table>
             </div>
           </div>
-          <!-- 中栏：操作区 -->
-          <div class="card" style="flex:0.8; min-width:220px; margin-bottom:0; overflow:auto;">
-            <h4 style="margin:0 0 8px">标签选择（一级）</h4>
-            <el-radio-group v-model="tag1" size="small" style="display:flex; flex-direction:column; gap:6px">
-              <el-radio-button label="SF" style="margin:0">SF 个别事实判断</el-radio-button>
-              <el-radio-button label="GF" style="margin:0">GF 一般事实判断</el-radio-button>
-              <el-radio-button label="SM" style="margin:0">SM 个别规范判断</el-radio-button>
-              <el-radio-button label="GM" style="margin:0">GM 一般规范判断</el-radio-button>
+
+          <!-- 中栏：标注操作区 -->
+          <div class="card" style="flex:0.85; min-width:240px; margin-bottom:0; overflow:auto; padding:14px;">
+            <div style="background:#f5f7fa; border-radius:4px; padding:8px 10px; margin-bottom:12px;">
+              <div style="font-size:12px; color:#909399">当前命题</div>
+              <div style="font-size:13px; color:#303133; font-weight:600; line-height:1.5">
+                {{ curPropText || '（未选择，可在左侧命题列表点击选择）' }}
+              </div>
+            </div>
+
+            <h4 style="margin:0 0 8px">一级标签（命题性质）</h4>
+            <el-radio-group v-model="tag1" size="small" style="display:flex; flex-direction:column; gap:6px" @change="applyTag">
+              <el-radio-button value="SF" style="margin:0">SF 个别事实判断</el-radio-button>
+              <el-radio-button value="GF" style="margin:0">GF 一般事实判断</el-radio-button>
+              <el-radio-button value="SM" style="margin:0">SM 个别规范判断</el-radio-button>
+              <el-radio-button value="GM" style="margin:0">GM 一般规范判断</el-radio-button>
             </el-radio-group>
+
             <template v-if="tag1==='GM'">
               <h4 style="margin:12px 0 8px">二级标签（GM 子类）</h4>
-              <el-select v-model="tag2" size="small" style="width:100%">
-                <el-option v-for="t in tag2list" :key="t" :label="t" :value="t"></el-option>
+              <el-select v-model="tag2" size="small" style="width:100%" @change="applyTag">
+                <el-option v-for="t in tag2list" :key="t.code" :label="t.label" :value="t.code"></el-option>
               </el-select>
             </template>
-            <h4 style="margin:12px 0 8px">关系标注</h4>
-            <el-select v-model="relType" size="small" style="width:100%">
-              <el-option v-for="r in relList" :key="r" :label="r" :value="r"></el-option>
-            </el-select>
-            <div style="margin:10px 0">
-              <el-button size="small" type="primary" @click="addRel">建立关系</el-button>
-            </div>
+
             <el-divider></el-divider>
+
+            <h4 style="margin:0 0 8px">关系标注（先选命题，再建关系）</h4>
+            <div style="font-size:12px; color:#909399; margin-bottom:6px">关系成员（可多选）：</div>
+            <el-select v-model="relFrom" multiple collapse-tags size="small" style="width:100%" placeholder="选择命题">
+              <el-option v-for="(p,i) in props" :key="p.id" :label="'p'+(i+1)+' · '+short(p.text)" :value="p.id"></el-option>
+            </el-select>
+            <div v-if="relType!=='J' && relType!=='I'" style="font-size:12px; color:#909399; margin:6px 0">指向目标（单个）：</div>
+            <el-select v-if="relType!=='J' && relType!=='I'" v-model="relTo" size="small" style="width:100%" placeholder="选择目标命题">
+              <el-option v-for="(p,i) in props" :key="p.id" :label="'p'+(i+1)+' · '+short(p.text)" :value="p.id"></el-option>
+            </el-select>
+            <el-select v-model="relType" size="small" style="width:100%; margin-top:8px">
+              <el-option v-for="r in relList" :key="r.code" :label="r.label" :value="r.code"></el-option>
+            </el-select>
+            <el-button size="small" type="primary" style="width:100%; margin-top:8px" @click="addRel">建立关系</el-button>
+
+            <el-divider></el-divider>
+
             <h4 style="margin:0 0 8px">已建关系</h4>
-            <el-tag v-for="(r,i) in rels" :key="i" size="small" style="margin:2px">{{ r }}</el-tag>
-            <div style="margin-top:16px">
-              <el-button type="success" size="small" @click="save">保存标注</el-button>
-              <el-button size="small">撤销/重做</el-button>
+            <div v-if="!rels.length" style="color:#c0c4cc; font-size:12px">暂无关系</div>
+            <div v-for="(r,i) in rels" :key="r.id" style="display:flex; align-items:center; gap:6px; margin:4px 0;">
+              <el-tag size="small" :type="relTagType(r.type)" style="flex-shrink:0">{{ r.type }}</el-tag>
+              <span style="font-size:12px; color:#606266; flex:1">{{ relText(r) }}</span>
+              <el-button size="mini" text type="danger" @click="delRel(i)">✕</el-button>
             </div>
-            <div style="margin-top:10px"><span class="proto-note">支持「先建命题后补标签」两步操作</span></div>
+
+            <div style="margin-top:16px; display:flex; gap:8px;">
+              <el-button type="success" size="small" style="flex:1" @click="save">保存标注</el-button>
+              <el-button size="small" @click="undo">撤销</el-button>
+              <el-button size="small" @click="redo">重做</el-button>
+            </div>
+            <div style="margin-top:10px"><span class="proto-note">支持「先建命题后补标签」两步操作；删除/合并后序号自动重排（Q8）</span></div>
           </div>
+
           <!-- 右栏：论证图示 -->
-          <div class="card" style="flex:1; margin-bottom:0; overflow:auto;">
-            <h4 style="margin:0 0 8px">论证图示（实时联动）</h4>
-            <div class="arg-graph">
-              <div style="text-align:center">
-                <span class="arg-node" v-for="(p,i) in props" :key="i">p{{ i+1 }}</span>
-              </div>
-              <div style="text-align:center; margin-top:8px">
-                <span class="arg-rel">{{ rels.length ? rels[0] : 'S(1,2)' }}</span>
-                <el-button size="mini" text type="primary" @click="go('graph.html')">查看大图 →</el-button>
-              </div>
+          <div class="card" style="flex:1.1; margin-bottom:0; overflow:auto; padding:14px; display:flex; flex-direction:column;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <h4 style="margin:0">论证图示（实时联动）</h4>
+              <el-button size="mini" text type="primary" @click="go('graph.html')">查看大图 →</el-button>
             </div>
-            <div style="margin-top:10px"><span class="proto-note">标注区改动 → 图示自动更新；图示拖拽 → 同步回数据</span></div>
+            <div style="flex:1; overflow:auto; border:1px solid #ebeef5; border-radius:6px; background:#fafafa;">
+              <svg ref="graph" width="760" height="520" style="display:block; cursor:default;">
+                <defs>
+                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#909399"/>
+                  </marker>
+                </defs>
+                <!-- 关系连线 -->
+                <g v-for="(e,i) in edges" :key="'e'+i">
+                  <line :x1="e.x1" :y1="e.y1" :x2="e.x2" :y2="e.y2"
+                        :stroke="e.type==='A' ? '#f56c6c' : '#409eff'"
+                        :stroke-width="e.type==='A' ? 1.6 : 1.6"
+                        :stroke-dasharray="e.dash ? '5,4' : 'none'"
+                        :marker-end="e.arrow ? 'url(#arrowhead)' : ''"/>
+                </g>
+                <!-- 关系徽标 -->
+                <g v-for="(b,i) in badges" :key="'b'+i" :transform="'translate('+b.x+','+b.y+')'">
+                  <circle r="12" :fill="b.fill" :stroke="b.stroke" stroke-width="1.6"/>
+                  <text text-anchor="middle" dominant-baseline="central" :font-size="b.symbol.length>1 ? 10 : 12"
+                        :fill="b.textColor" font-weight="600">{{ b.symbol }}</text>
+                </g>
+                <!-- 命题节点（可拖拽） -->
+                <g v-for="(n,i) in nodes" :key="'n'+n.id"
+                   @mousedown="startDrag($event, n.id)"
+                   :style="dragging===n.id ? 'cursor:grabbing;' : 'cursor:grab;'">
+                  <rect :x="n.x-72" :y="n.y-22" width="144" height="44" rx="6"
+                        :fill="nodeFill(n.tag1)" :stroke="nodeStroke(n.tag1)" stroke-width="1.5"/>
+                  <text :x="n.x" :y="n.y-2" text-anchor="middle" font-size="12" fill="#303133">p{{ n.ord }} {{ short(n.text) }}</text>
+                  <text :x="n.x" :y="n.y+12" text-anchor="middle" font-size="10" :fill="nodeStroke(n.tag1)">{{ tagText(n) }}</text>
+                </g>
+              </svg>
+            </div>
+            <div style="margin-top:8px"><span class="proto-note">标注区改动 → 图示自动更新；图示拖拽 → 同步回数据（Q9 是否可手动改关系待确认）</span></div>
           </div>
         </div>
+
       </div>
+    </div>
     </div>
   </div>
   <script src="assets/vendor/vue.global.prod.js"></script>
   <script src="assets/vendor/element-plus.full.min.js"></script>
   <script>
     const { createApp } = Vue;
+    let uid = 100;
     const App = {
       data() {
         return {
           pageTitle: '标注工作台',
           role: 'annotator',
-          
-            sel: 3,
-            segments: [
-              '本案中，原、被告之间系劳务合同关系，','原告已依约提供劳务，',
-              '被告应按照原、被告之间的约定给付劳务报酬。','被告尚欠原告劳务报酬11000元，',
-              '被告应向原告支付该11000元。',
-            ],
-            props: [
-              { idx:1, text:'原、被告之间系劳务合同关系', tag:'SM' },
-              { idx:2, text:'原告已依约提供劳务', tag:'SF' },
-              { idx:3, text:'被告应向原告支付该11000元', tag:'SM' },
-            ],
-            tag1: 'SM', tag2: '', tag2list: ['GM-L 法律条文','GM-I 法律解释','GM-C 合同及合同解释','GM-U 习惯与行业惯例','GM-M 道德与价值观念','GM-O 其他'],
-            relType: 'S 支持关系', relList: ['S 支持关系','A 反对关系','J 组合关系','M 匹配关系','I 同一关系'],
-            rels: ['S(J(1,2),3)'],
 
+          segments: [
+            { text: '本案中，原、被告之间系劳务合同关系。' },
+            { text: '原告已依约提供劳务。' },
+            { text: '被告应按照原、被告之间的约定给付劳务报酬。' },
+            { text: '被告尚欠原告劳务报酬11000元。' },
+            { text: '被告应向原告支付该11000元。' },
+          ],
+          props: [
+            { id: 1, text: '原、被告之间系劳务合同关系', tag1: 'SM', tag2: '' },
+            { id: 2, text: '原告已依约提供劳务', tag1: 'SF', tag2: '' },
+            { id: 3, text: '被告尚欠原告劳务报酬11000元', tag1: 'SF', tag2: '' },
+            { id: 4, text: '被告应向原告支付该11000元', tag1: 'SM', tag2: '' },
+          ],
+          rels: [
+            { id: 11, type: 'J', from: [2, 3], to: null },
+            { id: 12, type: 'S', from: [3], to: 4 },
+          ],
+
+          selSeg: 1,
+          curProp: null,
+          tag1: 'SM', tag2: '',
+          tag2list: [
+            { code:'GM-L', label:'GM-L 法律条文' }, { code:'GM-I', label:'GM-I 法律解释' },
+            { code:'GM-C', label:'GM-C 合同及合同解释' }, { code:'GM-U', label:'GM-U 习惯与行业惯例' },
+            { code:'GM-M', label:'GM-M 道德与价值观念' }, { code:'GM-O', label:'GM-O 其他' },
+          ],
+          relType: 'S', relFrom: [], relTo: null,
+          relList: [
+            { code:'S', label:'S 支持关系' }, { code:'A', label:'A 反对关系' },
+            { code:'J', label:'J 组合关系' }, { code:'M', label:'M 匹配关系' }, { code:'I', label:'I 同一关系' },
+          ],
+
+          history: [], future: [],
+          pos: {},
+          dragging: null,
         };
+      },
+      computed: {
+        curPropText() {
+          const p = this.props.find(x => x.id === this.curProp);
+          return p ? ('p' + (this.props.indexOf(p) + 1) + ' · ' + p.text) : '';
+        },
+        // 自动分层布局（手工拖拽过的节点优先使用 pos）
+        nodes() {
+          const depth = {};
+          this.props.forEach(p => depth[p.id] = 0);
+          let changed = true, guard = 0;
+          while (changed && guard++ < 50) {
+            changed = false;
+            this.rels.forEach(r => {
+              if (r.to != null) (r.from || []).forEach(f => {
+                if (depth[r.to] < depth[f] + 1) { depth[r.to] = depth[f] + 1; changed = true; }
+              });
+            });
+          }
+          const byDepth = {};
+          this.props.forEach(p => { (byDepth[depth[p.id]] = byDepth[depth[p.id]] || []).push(p.id); });
+          const colW = 210, rowH = 78;
+          return this.props.map((p, idx) => {
+            const col = depth[p.id], members = byDepth[depth[p.id]], rowIdx = members.indexOf(p.id);
+            const defX = 90 + col * colW;
+            const defY = 70 + rowIdx * rowH;
+            const px = this.pos[p.id] || { x: defX, y: defY };
+            return { id: p.id, ord: idx + 1, text: p.text, tag1: p.tag1, tag2: p.tag2, x: px.x, y: px.y };
+          });
+        },
+        edges() {
+          const out = [], pos = {};
+          this.nodes.forEach(n => pos[n.id] = n);
+          this.rels.forEach(r => {
+            if (r.type === 'J' || r.type === 'I') {
+              const pts = (r.from || []).map(id => pos[id]).filter(Boolean);
+              if (pts.length < 2) return;
+              const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length, cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+              pts.forEach(p => out.push({ x1:p.x, y1:p.y, x2:cx, y2:cy, type:r.type, dash:true, arrow:false }));
+            } else {
+              const f = pos[(r.from || [])[0]], t = pos[r.to];
+              if (!f || !t) return;
+              out.push({ x1:f.x, y1:f.y, x2:t.x, y2:t.y, type:r.type, dash:false, arrow:true });
+            }
+          });
+          return out;
+        },
+        badges() {
+          const out = [], pos = {};
+          this.nodes.forEach(n => pos[n.id] = n);
+          this.rels.forEach(r => {
+            if (r.type === 'J' || r.type === 'I') {
+              const pts = (r.from || []).map(id => pos[id]).filter(Boolean);
+              if (pts.length < 2) return;
+              const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length, cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+              out.push(this.badgeStyle(r.type, cx, cy));
+            } else {
+              const f = pos[(r.from || [])[0]], t = pos[r.to];
+              if (!f || !t) return;
+              out.push(this.badgeStyle(r.type, (f.x+t.x)/2, (f.y+t.y)/2));
+            }
+          });
+          return out;
+        },
       },
       methods: {
         go(p) { location.href = p; },
         logout() { location.href = 'index.html'; },
-        
-        tagType(t){ return {SF:'info',GF:'info',SM:'warning',GM:'primary'}[t]||'info'; },
-        newProp(){ this.props.push({ idx:this.props.length+1, text:this.segments[this.sel], tag:this.tag1||'待定' }); this.$message.success('命题已创建'); },
-        delProp(i){ this.props.splice(i,1); },
-        addRel(){ this.rels.push(this.relType.split(' ')[0]+'('+this.props.length+')'); this.$message.success('关系已建立'); },
-        save(){ this.$message.success('标注已保存'); },
+        short(t) { return t.length > 12 ? t.slice(0, 12) + '…' : t; },
+        tagText(p) { return p.tag1 === 'GM' && p.tag2 ? p.tag1 + '/' + p.tag2 : p.tag1; },
+        tagType(t) { return { SF:'info', GF:'success', SM:'warning', GM:'primary', '待定':'info' }[t] || 'info'; },
+        nodeFill(t) { return { SF:'#e6f7ff', GF:'#e6fffb', SM:'#fff7e6', GM:'#f9f0ff', '待定':'#f5f5f5' }[t] || '#f5f5f5'; },
+        nodeStroke(t) { return { SF:'#909399', GF:'#67c23a', SM:'#e6a23c', GM:'#9254de', '待定':'#c0c4cc' }[t] || '#c0c4cc'; },
+        relTagType(t) { return { S:'success', A:'danger', J:'warning', M:'warning', I:'info' }[t] || 'info'; },
+        relText(r) {
+          const from = (r.from || []).map(id => 'p' + (this.props.findIndex(p=>p.id===id)+1)).join(', ');
+          if (r.type === 'J' || r.type === 'I') return r.type + '(' + from + ')';
+          const to = 'p' + (this.props.findIndex(p=>p.id===r.to)+1);
+          return r.type + '(' + from + ' → ' + to + ')';
+        },
+        badgeStyle(type, x, y) {
+          const map = {
+            S: { fill:'#409eff', stroke:'#409eff', textColor:'#fff', symbol:'S' },
+            A: { fill:'#fff', stroke:'#f56c6c', textColor:'#f56c6c', symbol:'A' },
+            J: { fill:'#fff', stroke:'#e6a23c', textColor:'#e6a23c', symbol:'J＋' },
+            M: { fill:'#fff', stroke:'#e6a23c', textColor:'#e6a23c', symbol:'M＋' },
+            I: { fill:'#fff', stroke:'#909399', textColor:'#909399', symbol:'I/' },
+          };
+          return Object.assign({ x, y }, map[type] || map.S);
+        },
 
+        // —— 命题操作 ——
+        newProp() {
+          if (this.selSeg == null) { this.$message.warning('请先在原文中点击选择一段文本'); return; }
+          this.record();
+          this.props.push({ id: ++uid, text: this.segments[this.selSeg].text, tag1: '待定', tag2: '' });
+          this.curProp = this.props[this.props.length - 1].id;
+          this.$message.success('命题已创建，请在中间栏补标签');
+        },
+        onRowSelect(row) { if (row) { this.curProp = row.id; this.tag1 = row.tag1; this.tag2 = row.tag2; } },
+        applyTag() {
+          if (!this.curProp) { this.$message.warning('请先在左侧选择要标注的命题'); return; }
+          const p = this.props.find(x => x.id === this.curProp);
+          if (!p) return;
+          this.record();
+          p.tag1 = this.tag1;
+          p.tag2 = this.tag1 === 'GM' ? this.tag2 : '';
+          this.$message.success('标签已应用');
+        },
+        delProp(i) {
+          const id = this.props[i] && this.props[i].id;
+          this.record();
+          this.props.splice(i, 1);
+          this.rels = this.rels.filter(r => (r.from || []).indexOf(id) === -1 && r.to !== id);
+          if (this.curProp === id) this.curProp = null;
+        },
+        mergeUp(i) {
+          if (i === 0) { this.$message.warning('已是第一条，无法向上合并'); return; }
+          this.record();
+          const a = this.props[i-1], b = this.props[i];
+          a.text = a.text + '；' + b.text;
+          this.props.splice(i, 1);
+          this.$message.success('已合并，序号自动重排');
+        },
+
+        // —— 关系操作 ——
+        addRel() {
+          if (this.relType === 'J' || this.relType === 'I') {
+            if (this.relFrom.length < 2) { this.$message.warning('组合/同一关系至少选择 2 个命题'); return; }
+            this.record();
+            this.rels.push({ id: ++uid, type: this.relType, from: this.relFrom.slice(), to: null });
+          } else {
+            if (!this.relFrom.length || this.relTo == null) { this.$message.warning('支持/反对/匹配关系需选择成员与目标'); return; }
+            this.record();
+            this.rels.push({ id: ++uid, type: this.relType, from: [this.relFrom[0]], to: this.relTo });
+          }
+          this.$message.success('关系已建立');
+        },
+        delRel(i) { this.record(); this.rels.splice(i, 1); },
+
+        // —— 撤销 / 重做 ——
+        record() {
+          this.history.push(JSON.stringify({ props: this.props, rels: this.rels, pos: this.pos }));
+          this.future = [];
+          if (this.history.length > 50) this.history.shift();
+        },
+        undo() {
+          if (!this.history.length) { this.$message.info('没有可撤销的操作'); return; }
+          this.future.push(JSON.stringify({ props: this.props, rels: this.rels, pos: this.pos }));
+          const s = JSON.parse(this.history.pop());
+          this.props = s.props; this.rels = s.rels; this.pos = s.pos;
+        },
+        redo() {
+          if (!this.future.length) { this.$message.info('没有可重做的操作'); return; }
+          this.history.push(JSON.stringify({ props: this.props, rels: this.rels, pos: this.pos }));
+          const s = JSON.parse(this.future.pop());
+          this.props = s.props; this.rels = s.rels; this.pos = s.pos;
+        },
+        save() { this.$message.success('标注已保存（原型演示）'); },
+
+        // —— 图示拖拽（同步回数据）——
+        startDrag(e, id) {
+          const svg = this.$refs.graph;
+          const rect = svg.getBoundingClientRect();
+          const node = this.nodes.find(n => n.id === id);
+          const offset = { x: e.clientX - rect.left - node.x, y: e.clientY - rect.top - node.y };
+          this.dragging = id;
+          const onMove = ev => {
+            this.pos[id] = { x: ev.clientX - rect.left - offset.x, y: ev.clientY - rect.top - offset.y };
+          };
+          const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            this.dragging = null;
+          };
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+        },
       }
     };
     createApp(App).use(ElementPlus).mount('#app');
