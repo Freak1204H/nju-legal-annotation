@@ -63,7 +63,7 @@
       data() {
         return {
           pageTitle: '用户管理',
-          role: 'annotator',
+          role: localStorage.getItem('demoRole') || 'annotator',
           
             users: [
               { account:'teacher', name:'张老师', roles:['creator','arbitrator'] },
@@ -73,6 +73,9 @@
             ],
 
         };
+      },
+      computed: {
+        
       },
       methods: {
         go(p) { location.href = p; },

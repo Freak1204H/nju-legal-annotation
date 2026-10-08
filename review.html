@@ -68,7 +68,7 @@
       data() {
         return {
           pageTitle: '冲突解决',
-          role: 'annotator',
+          role: localStorage.getItem('demoRole') || 'annotator',
           
             diffs: [
               { item:'命题 P5 标签', a:'SF 个别事实判断', b:'GM 一般规范判断', pick:'A' },
@@ -77,6 +77,9 @@
             ],
 
         };
+      },
+      computed: {
+        
       },
       methods: {
         go(p) { location.href = p; },

@@ -58,7 +58,7 @@
       data() {
         return {
           pageTitle: '差异比对',
-          role: 'annotator',
+          role: localStorage.getItem('demoRole') || 'annotator',
           
             diffs: [
               { type:'标签不同', item:'P5', detail:'A 标注为 SF，B 标注为 GM', count:'2/3 存在分歧' },
@@ -67,6 +67,9 @@
             ],
 
         };
+      },
+      computed: {
+        
       },
       methods: {
         go(p) { location.href = p; },

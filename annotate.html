@@ -119,7 +119,7 @@
       data() {
         return {
           pageTitle: '标注工作台',
-          role: 'annotator',
+          role: localStorage.getItem('demoRole') || 'annotator',
           
             sel: 3,
             segments: [
@@ -137,6 +137,9 @@
             rels: ['S(J(1,2),3)'],
 
         };
+      },
+      computed: {
+        
       },
       methods: {
         go(p) { location.href = p; },

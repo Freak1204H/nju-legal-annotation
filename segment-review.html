@@ -69,7 +69,7 @@
       data() {
         return {
           pageTitle: '切割复核',
-          role: 'annotator',
+          role: localStorage.getItem('demoRole') || 'annotator',
           
             rows: [
               { idx:'P1', a:'依法成立的合同，自成立时生效。', b:'依法成立的合同，自成立时生效。', same:true, pick:'A' },
@@ -78,6 +78,9 @@
             ],
 
         };
+      },
+      computed: {
+        
       },
       methods: {
         go(p) { location.href = p; },

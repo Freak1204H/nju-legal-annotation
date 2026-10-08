@@ -76,7 +76,7 @@
       data() {
         return {
           pageTitle: '配置中心',
-          role: 'annotator',
+          role: localStorage.getItem('demoRole') || 'annotator',
           
             tags1: [
               { code:'SF', name:'个别事实判断', def:'关于案件中个别对象的事实判断，是规范适用的前提条件' },
@@ -101,6 +101,9 @@
             ],
 
         };
+      },
+      computed: {
+        
       },
       methods: {
         go(p) { location.href = p; },

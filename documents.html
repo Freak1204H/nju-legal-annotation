@@ -71,7 +71,7 @@
       data() {
         return {
           pageTitle: '文书总库',
-          role: 'annotator',
+          role: localStorage.getItem('demoRole') || 'annotator',
           
             docs: [
               { name: '余某、徐某劳务合同纠纷一审判决书', type: '普通案例', caseNo: '(2023)苏0106民初18909号', court: '南京市鼓楼区人民法院', status: '已提取' },
@@ -80,6 +80,9 @@
             ],
 
         };
+      },
+      computed: {
+        
       },
       methods: {
         go(p) { location.href = p; },
