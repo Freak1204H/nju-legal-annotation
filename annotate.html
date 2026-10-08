@@ -119,8 +119,41 @@
       data() {
         return {
           pageTitle: '标注工作台',
+          role: 'annotator',
+
+          segments: [
+            { text: '本案中，原、被告之间系劳务合同关系。' },
+            { text: '原告已依约提供劳务。' },
+            { text: '被告应按照原、被告之间的约定给付劳务报酬。' },
+            { text: '被告尚欠原告劳务报酬11000元。' },
+            { text: '被告应向原告支付该11000元。' },
+          ],
+          props: [
+            { id: 1, text: '原、被告之间系劳务合同关系', tag1: 'SM', tag2: '' },
+            { id: 2, text: '原告已依约提供劳务', tag1: 'SF', tag2: '' },
+            { id: 3, text: '被告尚欠原告劳务报酬11000元', tag1: 'SF', tag2: '' },
+            { id: 4, text: '被告应向原告支付该11000元', tag1: 'SM', tag2: '' },
+          ],
+          rels: [
+            { id: 11, type: 'J', from: [2, 3], to: null },
+            { id: 12, type: 'S', from: [3], to: 4 },
+          ],
+
+          selSeg: 1,
+          curProp: null,
+          tag1: 'SM', tag2: '',
+          tag2list: [
+            { code:'GM-L', label:'GM-L 法律条文' }, { code:'GM-I', label:'GM-I 法律解释' },
+            { code:'GM-C', label:'GM-C 合同及合同解释' }, { code:'GM-U', label:'GM-U 习惯与行业惯例' },
+            { code:'GM-M', label:'GM-M 道德与价值观念' }, { code:'GM-O', label:'GM-O 其他' },
+          ],
+          relType: 'S', relFrom: [], relTo: null,
+          relList: [
+            { code:'S', label:'S 支持关系' }, { code:'A', label:'A 反对关系' },
+            { code:'J', label:'J 组合关系' }, { code:'M', label:'M 匹配关系' }, { code:'I', label:'I 同一关系' },
+          ],
           role: localStorage.getItem('demoRole') || 'annotator',
-          
+
             sel: 3,
             segments: [
               '本案中，原、被告之间系劳务合同关系，','原告已依约提供劳务，',
@@ -139,7 +172,71 @@
         };
       },
       computed: {
-        
+        curPropText() {
+          const p = this.props.find(x => x.id === this.curProp);
+          return p ? ('p' + (this.props.indexOf(p) + 1) + ' · ' + p.text) : '';
+        },
+        // 自动分层布局（手工拖拽过的节点优先使用 pos）
+        nodes() {
+          const depth = {};
+          this.props.forEach(p => depth[p.id] = 0);
+          let changed = true, guard = 0;
+          while (changed && guard++ < 50) {
+            changed = false;
+            this.rels.forEach(r => {
+              if (r.to != null) (r.from || []).forEach(f => {
+                if (depth[r.to] < depth[f] + 1) { depth[r.to] = depth[f] + 1; changed = true; }
+              });
+            });
+          }
+          const byDepth = {};
+          this.props.forEach(p => { (byDepth[depth[p.id]] = byDepth[depth[p.id]] || []).push(p.id); });
+          const colW = 210, rowH = 78;
+          return this.props.map((p, idx) => {
+            const col = depth[p.id], members = byDepth[depth[p.id]], rowIdx = members.indexOf(p.id);
+            const defX = 90 + col * colW;
+            const defY = 70 + rowIdx * rowH;
+            const px = this.pos[p.id] || { x: defX, y: defY };
+            return { id: p.id, ord: idx + 1, text: p.text, tag1: p.tag1, tag2: p.tag2, x: px.x, y: px.y };
+          });
+        },
+        edges() {
+          const out = [], pos = {};
+          this.nodes.forEach(n => pos[n.id] = n);
+          this.rels.forEach(r => {
+            if (r.type === 'J' || r.type === 'I') {
+              const pts = (r.from || []).map(id => pos[id]).filter(Boolean);
+              if (pts.length < 2) return;
+              const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length, cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+              pts.forEach(p => out.push({ x1:p.x, y1:p.y, x2:cx, y2:cy, type:r.type, dash:true, arrow:false }));
+            } else {
+              const f = pos[(r.from || [])[0]], t = pos[r.to];
+              if (!f || !t) return;
+              out.push({ x1:f.x, y1:f.y, x2:t.x, y2:t.y, type:r.type, dash:false, arrow:true });
+            }
+          });
+          return out;
+        },
+        badges() {
+          const out = [], pos = {};
+          this.nodes.forEach(n => pos[n.id] = n);
+          this.rels.forEach(r => {
+            if (r.type === 'J' || r.type === 'I') {
+              const pts = (r.from || []).map(id => pos[id]).filter(Boolean);
+              if (pts.length < 2) return;
+              const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length, cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+              out.push(this.badgeStyle(r.type, cx, cy));
+            } else {
+              const f = pos[(r.from || [])[0]], t = pos[r.to];
+              if (!f || !t) return;
+              out.push(this.badgeStyle(r.type, (f.x+t.x)/2, (f.y+t.y)/2));
+            }
+          });
+          return out;
+        },
+      },
+      computed: {
+
       },
       methods: {
         go(p) { location.href = p; },

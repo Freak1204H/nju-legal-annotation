@@ -10,15 +10,39 @@
 <body>
   <div id="app">
     <div class="layout">
-      
+
     <aside class="sidebar">
       <div class="brand">裁判文书标注平台</div>
       <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
                default-active="graph.html" style="border-right:none;">
-        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" class="is-active" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+        <el-menu-item-group title="总览">
+          <el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="任务">
+          <el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item>
+          <el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item>
+          <el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="标注">
+          <el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item>
+          <el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item>
+          <el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item>
+          <el-menu-item index="graph.html" class="is-active" @click="go('graph.html')">论证图示</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="裁定">
+          <el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item>
+          <el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="输出">
+          <el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="管理">
+          <el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item>
+          <el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item>
+        </el-menu-item-group>
       </el-menu>
     </aside>
-      
+
     <div class="main">
       <div class="topbar">
         <div class="title">{{ pageTitle }}</div>
@@ -35,32 +59,73 @@
       <div class="content">
 
         <h2 class="page-title">论证图示</h2>
-        <p class="page-desc">方框表命题、圆节点表关系；实心圆=支持、空心圆=反对、"+"圆=组合/匹配、框内"/"=同一</p>
+        <p class="page-desc">方框=命题 · 圆节点=关系；实心圆=支持、空心圆=反对、"+"圆=组合/匹配、框内"/"=同一（可拖拽节点、缩放）</p>
+
         <div class="card">
-          <div class="arg-graph" style="min-height:360px; position:relative;">
-            <div style="text-align:center; padding-top:20px">
-              <span class="arg-node">p1 系劳务合同关系<el-tag size="mini">SM</el-tag></span>
-              <span class="arg-node">p2 已依约提供劳务<el-tag size="mini">SF</el-tag></span>
-            </div>
-            <div style="text-align:center; margin:10px 0; color:#909399">⊕ 组合 J(1,2) ──▶ 匹配 M(•,P6) ──▶ ● 支持 S</div>
-            <div style="text-align:center">
-              <span class="arg-node conclusion">p3 应向原告支付11000元<el-tag size="mini" type="danger">SM</el-tag></span>
-            </div>
-            <div style="text-align:center; margin-top:30px; border-top:1px dashed #dcdfe6; padding-top:16px">
-              <span class="arg-node">p4 主张另有600元<el-tag size="mini">SF</el-tag></span>
-              <span class="arg-arrow">◄──○</span>
-              <span class="arg-node">p5 证据不足<el-tag size="mini">SF</el-tag></span>
-              <span class="arg-arrow">──▶●</span>
-              <span class="arg-node conclusion">p6 不予支持<el-tag size="mini" type="danger">SM</el-tag></span>
-            </div>
-            <div style="position:absolute; top:8px; right:12px">
-              <el-button size="small">导出 PNG</el-button>
-              <el-button size="small">导出 SVG</el-button>
-            </div>
+          <!-- 图例 -->
+          <div style="display:flex; gap:18px; flex-wrap:wrap; align-items:center; margin-bottom:12px; padding:10px; background:#f5f7fa; border-radius:6px;">
+            <span style="font-size:13px; color:#606266; font-weight:600">关系图例：</span>
+            <span><span style="display:inline-block; width:16px; height:16px; border-radius:50%; background:#409eff; vertical-align:-3px;"></span> S 支持</span>
+            <span><span style="display:inline-block; width:14px; height:14px; border-radius:50%; background:#fff; border:2px solid #f56c6c; vertical-align:-3px;"></span> A 反对</span>
+            <span><span style="display:inline-block; color:#e6a23c; font-weight:700;">⊕</span> J 组合 / M 匹配</span>
+            <span><span style="display:inline-block; color:#909399; font-weight:700;">/</span> I 同一</span>
           </div>
-          <span class="proto-note">一个文书可能含多个独立论证结构，需支持分图切换（Q 多图支持）</span>
+
+          <!-- 工具栏 -->
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+            <el-button size="small" @click="zoomIn">＋ 放大</el-button>
+            <el-button size="small" @click="zoomOut">－ 缩小</el-button>
+            <el-button size="small" @click="resetZoom">重置</el-button>
+            <span style="color:#909399; font-size:12px">{{ Math.round(zoom*100) }}%</span>
+            <div style="flex:1"></div>
+            <el-button size="small" type="primary" @click="exportSVG">导出 SVG</el-button>
+            <el-button size="small" @click="exportPNG">导出 PNG</el-button>
+          </div>
+
+          <!-- 多图切换 -->
+          <el-tabs v-model="active">
+            <el-tab-pane v-for="(g,i) in graphs" :key="i" :label="g.name" :name="i"></el-tab-pane>
+          </el-tabs>
+
+          <div style="border:1px solid #ebeef5; border-radius:6px; background:#fafafa; overflow:auto; max-height:560px;">
+            <svg ref="graph" width="900" height="560" style="display:block;">
+              <defs>
+                <marker id="g-arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#909399"/>
+                </marker>
+              </defs>
+              <g :transform="'scale('+zoom+')'">
+                <g v-for="(e,i) in edges" :key="'e'+i">
+                  <line :x1="e.x1" :y1="e.y1" :x2="e.x2" :y2="e.y2"
+                        :stroke="e.type==='A' ? '#f56c6c' : '#409eff'" stroke-width="1.6"
+                        :stroke-dasharray="e.dash ? '5,4' : 'none'"
+                        :marker-end="e.arrow ? 'url(#g-arrowhead)' : ''"/>
+                </g>
+                <g v-for="(b,i) in badges" :key="'b'+i" :transform="'translate('+b.x+','+b.y+')'">
+                  <circle r="12" :fill="b.fill" :stroke="b.stroke" stroke-width="1.6"/>
+                  <text text-anchor="middle" dominant-baseline="central" :font-size="b.symbol.length>1 ? 10 : 12"
+                        :fill="b.textColor" font-weight="600">{{ b.symbol }}</text>
+                </g>
+                <g v-for="(n,i) in nodes" :key="'n'+n.id"
+                   @mousedown="startDrag($event, n.id)"
+                   :style="dragging===n.id ? 'cursor:grabbing;' : 'cursor:grab;'">
+                  <rect :x="n.x-76" :y="n.y-24" width="152" height="48" rx="6"
+                        :fill="nodeFill(n.tag1)" :stroke="nodeStroke(n.tag1)" stroke-width="1.5"/>
+                  <text :x="n.x" :y="n.y-3" text-anchor="middle" font-size="12" fill="#303133">p{{ n.ord }} {{ short(n.text) }}</text>
+                  <text :x="n.x" :y="n.y+13" text-anchor="middle" font-size="10" :fill="nodeStroke(n.tag1)">{{ tagText(n) }}</text>
+                </g>
+              </g>
+            </svg>
+          </div>
+
+          <div style="margin-top:10px">
+            <span class="proto-note">一个文书可能含多个独立论证结构，需支持分图切换（Q 多图支持）</span>
+            <span class="proto-note">自动排版算法（避免交叉/重叠）待确认，当前为分层自动布局</span>
+          </div>
         </div>
+
       </div>
+    </div>
     </div>
   </div>
   <script src="assets/vendor/vue.global.prod.js"></script>
@@ -71,17 +136,175 @@
       data() {
         return {
           pageTitle: '论证图示',
+          role: 'annotator',
+          active: 0,
+          zoom: 1,
+          dragging: null,
+          graphs: [
+            {
+              name: '主论证 · 支持结构',
+              pos: {},
+              props: [
+                { id: 1, text: '原、被告之间系劳务合同关系', tag1: 'SM', tag2: '' },
+                { id: 2, text: '原告已依约提供劳务', tag1: 'SF', tag2: '' },
+                { id: 3, text: '被告尚欠原告劳务报酬11000元', tag1: 'SF', tag2: '' },
+                { id: 4, text: '被告应向原告支付该11000元', tag1: 'SM', tag2: '' },
+              ],
+              rels: [
+                { id: 11, type: 'J', from: [2, 3], to: null },
+                { id: 12, type: 'S', from: [3], to: 4 },
+              ],
+            },
+            {
+              name: '抗辩结构 · 反对关系',
+              pos: {},
+              props: [
+                { id: 5, text: '原告主张另有600元报酬', tag1: 'SF', tag2: '' },
+                { id: 6, text: '该主张缺乏证据证明', tag1: 'SF', tag2: '' },
+                { id: 7, text: '对该部分主张不予支持', tag1: 'SM', tag2: '' },
+              ],
+              rels: [
+                { id: 13, type: 'A', from: [6], to: 5 },
+                { id: 14, type: 'S', from: [6], to: 7 },
+              ],
+            },
+          ],
           role: localStorage.getItem('demoRole') || 'annotator',
-          
+
         };
       },
       computed: {
-        
+
+      },
+      computed: {
+        g() { return this.graphs[this.active]; },
+        nodes() {
+          const g = this.g, depth = {};
+          g.props.forEach(p => depth[p.id] = 0);
+          let changed = true, guard = 0;
+          while (changed && guard++ < 50) {
+            changed = false;
+            g.rels.forEach(r => {
+              if (r.to != null) (r.from || []).forEach(f => {
+                if (depth[r.to] < depth[f] + 1) { depth[r.to] = depth[f] + 1; changed = true; }
+              });
+            });
+          }
+          const byDepth = {};
+          g.props.forEach(p => { (byDepth[depth[p.id]] = byDepth[depth[p.id]] || []).push(p.id); });
+          const colW = 230, rowH = 84;
+          return g.props.map((p, idx) => {
+            const col = depth[p.id], rowIdx = byDepth[depth[p.id]].indexOf(p.id);
+            const defX = 100 + col * colW, defY = 80 + rowIdx * rowH;
+            const px = g.pos[p.id] || { x: defX, y: defY };
+            return { id: p.id, ord: idx + 1, text: p.text, tag1: p.tag1, tag2: p.tag2, x: px.x, y: px.y };
+          });
+        },
+        edges() {
+          const out = [], pos = {};
+          this.nodes.forEach(n => pos[n.id] = n);
+          this.g.rels.forEach(r => {
+            if (r.type === 'J' || r.type === 'I') {
+              const pts = (r.from || []).map(id => pos[id]).filter(Boolean);
+              if (pts.length < 2) return;
+              const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length, cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+              pts.forEach(p => out.push({ x1:p.x, y1:p.y, x2:cx, y2:cy, type:r.type, dash:true, arrow:false }));
+            } else {
+              const f = pos[(r.from || [])[0]], t = pos[r.to];
+              if (!f || !t) return;
+              out.push({ x1:f.x, y1:f.y, x2:t.x, y2:t.y, type:r.type, dash:false, arrow:true });
+            }
+          });
+          return out;
+        },
+        badges() {
+          const out = [], pos = {};
+          this.nodes.forEach(n => pos[n.id] = n);
+          this.g.rels.forEach(r => {
+            if (r.type === 'J' || r.type === 'I') {
+              const pts = (r.from || []).map(id => pos[id]).filter(Boolean);
+              if (pts.length < 2) return;
+              const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length, cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+              out.push(this.badgeStyle(r.type, cx, cy));
+            } else {
+              const f = pos[(r.from || [])[0]], t = pos[r.to];
+              if (!f || !t) return;
+              out.push(this.badgeStyle(r.type, (f.x+t.x)/2, (f.y+t.y)/2));
+            }
+          });
+          return out;
+        },
       },
       methods: {
         go(p) { location.href = p; },
         logout() { location.href = 'index.html'; },
-        
+        short(t) { return t.length > 13 ? t.slice(0, 13) + '…' : t; },
+        tagText(p) { return p.tag1 === 'GM' && p.tag2 ? p.tag1 + '/' + p.tag2 : p.tag1; },
+        nodeFill(t) { return { SF:'#e6f7ff', GF:'#e6fffb', SM:'#fff7e6', GM:'#f9f0ff', '待定':'#f5f5f5' }[t] || '#f5f5f5'; },
+        nodeStroke(t) { return { SF:'#909399', GF:'#67c23a', SM:'#e6a23c', GM:'#9254de', '待定':'#c0c4cc' }[t] || '#c0c4cc'; },
+        badgeStyle(type, x, y) {
+          const map = {
+            S: { fill:'#409eff', stroke:'#409eff', textColor:'#fff', symbol:'S' },
+            A: { fill:'#fff', stroke:'#f56c6c', textColor:'#f56c6c', symbol:'A' },
+            J: { fill:'#fff', stroke:'#e6a23c', textColor:'#e6a23c', symbol:'J＋' },
+            M: { fill:'#fff', stroke:'#e6a23c', textColor:'#e6a23c', symbol:'M＋' },
+            I: { fill:'#fff', stroke:'#909399', textColor:'#909399', symbol:'I/' },
+          };
+          return Object.assign({ x, y }, map[type] || map.S);
+        },
+        zoomIn() { this.zoom = Math.min(2, +(this.zoom + 0.1).toFixed(1)); },
+        zoomOut() { this.zoom = Math.max(0.5, +(this.zoom - 0.1).toFixed(1)); },
+        resetZoom() { this.zoom = 1; },
+        startDrag(e, id) {
+          const svg = this.$refs.graph;
+          const rect = svg.getBoundingClientRect();
+          const node = this.nodes.find(n => n.id === id);
+          const offset = { x: (e.clientX - rect.left) / this.zoom - node.x, y: (e.clientY - rect.top) / this.zoom - node.y };
+          this.dragging = id;
+          const onMove = ev => {
+            this.g.pos[id] = { x: (ev.clientX - rect.left) / this.zoom - offset.x, y: (ev.clientY - rect.top) / this.zoom - offset.y };
+          };
+          const onUp = () => {
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            this.dragging = null;
+          };
+          window.addEventListener('mousemove', onMove);
+          window.addEventListener('mouseup', onUp);
+        },
+        exportSVG() {
+          const svg = this.$refs.graph;
+          const clone = svg.cloneNode(true);
+          clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          clone.setAttribute('width', svg.getAttribute('width'));
+          clone.setAttribute('height', svg.getAttribute('height'));
+          const blob = new Blob([clone.outerHTML], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = '论证图示_' + this.g.name + '.svg'; a.click();
+          URL.revokeObjectURL(url);
+          this.$message.success('SVG 已导出');
+        },
+        exportPNG() {
+          const svg = this.$refs.graph;
+          const clone = svg.cloneNode(true);
+          clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          clone.setAttribute('width', svg.getAttribute('width'));
+          clone.setAttribute('height', svg.getAttribute('height'));
+          const xml = new XMLSerializer().serializeToString(clone);
+          const src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(xml)));
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = parseInt(svg.getAttribute('width')); c.height = parseInt(svg.getAttribute('height'));
+            c.getContext('2d').drawImage(img, 0, 0);
+            const a = document.createElement('a');
+            a.href = c.toDataURL('image/png'); a.download = '论证图示_' + this.g.name + '.png'; a.click();
+            this.$message.success('PNG 已导出');
+          };
+          img.onerror = () => this.$message.warning('PNG 导出失败（演示环境），请改用 SVG');
+          img.src = src;
+        },
       }
     };
     createApp(App).use(ElementPlus).mount('#app');

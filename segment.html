@@ -10,15 +10,39 @@
 <body>
   <div id="app">
     <div class="layout">
-      
+
     <aside class="sidebar">
       <div class="brand">裁判文书标注平台</div>
       <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
                default-active="segment.html" style="border-right:none;">
-        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" class="is-active" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+        <el-menu-item-group title="总览">
+          <el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="任务">
+          <el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item>
+          <el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item>
+          <el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="标注">
+          <el-menu-item index="segment.html" class="is-active" @click="go('segment.html')">文本切割</el-menu-item>
+          <el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item>
+          <el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item>
+          <el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="裁定">
+          <el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item>
+          <el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="输出">
+          <el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item>
+        </el-menu-item-group>
+        <el-menu-item-group title="管理">
+          <el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item>
+          <el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item>
+        </el-menu-item-group>
       </el-menu>
     </aside>
-      
+
     <div class="main">
       <div class="topbar">
         <div class="title">{{ pageTitle }}</div>
@@ -35,23 +59,59 @@
       <div class="content">
 
         <h2 class="page-title">文本切割</h2>
-        <p class="page-desc">颗粒度对齐：把「裁判理由」按句号/分号切割成命题单元（对应标注指南 v1.2）</p>
-        <div class="card" style="display:flex; gap:16px">
-          <div style="flex:1; border:1px solid #ebeef5; border-radius:6px; padding:12px; max-height:520px; overflow:auto;">
-            <h4 style="margin:0 0 8px">原文（裁判理由部分）</h4>
-            <p style="line-height:1.9; color:#303133; font-size:13px">{{ original }}</p>
-          </div>
-          <div style="flex:1; border:1px solid #ebeef5; border-radius:6px; padding:12px; max-height:520px; overflow:auto;">
-            <h4 style="margin:0 0 8px">切割结果（命题单元）</h4>
-            <div v-for="(s,i) in segments" :key="i" style="border:1px solid #409eff; background:#ecf5ff; border-radius:4px; padding:8px 10px; margin-bottom:8px;">
-              <el-tag size="small" type="primary">P{{ i+1 }}</el-tag>
-              <span style="font-size:13px">{{ s }}</span>
+        <p class="page-desc">颗粒度对齐：把「裁判理由」按命题单元切割，记录字符索引区间（对应标注指南 v1.2）</p>
+
+        <!-- 统计条 -->
+        <div class="stat-row" style="margin-bottom:16px">
+          <div class="stat-card"><div class="num">{{ segments.length }}</div><div class="label">已切命题数</div></div>
+          <div class="stat-card"><div class="num">{{ coveredChars }} / {{ original.length }}</div><div class="label">覆盖字符数</div></div>
+          <div class="stat-card"><div class="num">{{ coverage }}%</div><div class="label">切割覆盖率</div></div>
+          <div class="stat-card"><div class="num">待复核</div><div class="label">切割状态</div></div>
+        </div>
+
+        <div class="card" style="display:flex; gap:16px; align-items:flex-start;">
+          <!-- 左：原文（可划选） -->
+          <div style="flex:1.2; min-width:0;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <h4 style="margin:0">原文（裁判理由部分）</h4>
+              <el-button size="small" @click="autoSplit">⚡ 智能预切割（按句读）</el-button>
             </div>
-            <el-button size="small" type="success" style="margin-top:8px">提交切割结果</el-button>
+            <p id="origText" style="line-height:2; color:#303133; font-size:13px; margin:0; padding:12px; border:1px solid #ebeef5; border-radius:6px; background:#fafafa; user-select:text; cursor:text;">{{ original }}</p>
+            <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+              <el-button type="primary" size="small" @click="addFromSelection">✂ 从选中文本新建命题</el-button>
+              <span style="color:#909399; font-size:12px">提示：按住鼠标左键在上方原文中划选一句/一段话，再点此按钮</span>
+            </div>
+            <div style="margin-top:10px">
+              <span class="proto-note">切割颗粒度（句号/分号/逗号）需与标注指南 v1.2 对齐确认</span>
+            </div>
+          </div>
+
+          <!-- 右：切割结果 -->
+          <div style="flex:1; min-width:0;">
+            <h4 style="margin:0 0 8px">切割结果（命题单元，序号自动重排）</h4>
+            <div style="max-height:430px; overflow:auto;">
+              <div v-for="(s,i) in segments" :key="i" style="display:flex; gap:8px; align-items:flex-start; border:1px solid #409eff; background:#ecf5ff; border-radius:4px; padding:8px 10px; margin-bottom:8px;">
+                <el-tag size="small" type="primary" style="flex-shrink:0">P{{ i+1 }}</el-tag>
+                <span style="font-size:13px; line-height:1.6; flex:1">{{ s.text }}</span>
+                <span style="font-size:11px; color:#909399; flex-shrink:0; white-space:nowrap;">[{{ s.start }},{{ s.end }}]</span>
+                <el-button size="mini" text type="primary" @click="mergeDown(i)">合并</el-button>
+                <el-button size="mini" text type="danger" @click="remove(i)">删除</el-button>
+              </div>
+              <el-empty v-if="!segments.length" description="尚未切割，请先在左侧划选文本" :image-size="60"></el-empty>
+            </div>
+            <div style="margin-top:12px">
+              <el-button type="success" size="small" :disabled="!segments.length" @click="submit">提交切割结果</el-button>
+            </div>
           </div>
         </div>
-        <div class="card"><span class="proto-note">切割需经裁定者复核，二人一致性 > 80% 时定稿（标注指南 3 节）</span></div>
+
+        <div class="card">
+          <span class="proto-note">切割需经裁定者复核，二人一致性 > 80% 时定稿（标注指南第 3 节）</span>
+          <span class="proto-note">命题序号按切割顺序自动生成，是否支持手动调序待确认（Q8）</span>
+        </div>
+
       </div>
+    </div>
     </div>
   </div>
   <script src="assets/vendor/vue.global.prod.js"></script>
@@ -62,8 +122,15 @@
       data() {
         return {
           pageTitle: '文本切割',
+          role: 'annotator',
+          original: '依法成立的合同，自成立时生效。当事人应当按照约定全面履行自己的义务。当事人一方未支付价款、报酬、租金、利息，或者不履行其他金钱债务的，对方可以请求其支付。本案中，原、被告之间系劳务合同关系，原告已依约提供劳务，被告应按照原、被告之间的约定给付劳务报酬。',
+          segments: [
+            { start: 0, end: 0, text: '依法成立的合同，自成立时生效。' },
+            { start: 0, end: 0, text: '当事人应当按照约定全面履行自己的义务。' },
+            { start: 0, end: 0, text: '当事人一方未支付价款、报酬、租金、利息，或者不履行其他金钱债务的，对方可以请求其支付。' },
+          ],
           role: localStorage.getItem('demoRole') || 'annotator',
-          
+
             original: '本院认为，依法成立的合同，自成立时生效。当事人应当按照约定全面履行自己的义务。当事人一方未支付价款、报酬、租金、利息，或者不履行其他金钱债务的，对方可以请求其支付。本案中，原、被告之间系劳务合同关系，原告已依约提供劳务，被告应按照原、被告之间的约定给付劳务报酬。',
             segments: [
               '依法成立的合同，自成立时生效。',
@@ -76,13 +143,79 @@
 
         };
       },
+      created() {
+        // 依据原文为初始切割自动补全字符索引区间，保证 [start,end] 与原文一致
+        let cursor = 0;
+        this.segments.forEach(s => {
+          const idx = this.original.indexOf(s.text, cursor);
+          if (idx >= 0) { s.start = idx; s.end = idx + s.text.length; cursor = s.end; }
+        });
+      },
       computed: {
-        
+        coveredChars() {
+          let cov = 0, last = -1;
+          this.segments.slice().sort((a,b)=>a.start-b.start).forEach(s => {
+            const st = Math.max(s.start, last + 1);
+            if (s.end > st) cov += (s.end - st);
+            last = Math.max(last, s.end);
+          });
+          return cov;
+        },
+        coverage() {
+          if (!this.original.length) return 0;
+          return Math.min(100, Math.round(this.coveredChars / this.original.length * 100));
+        },
+      },
+      computed: {
+
       },
       methods: {
         go(p) { location.href = p; },
         logout() { location.href = 'index.html'; },
-        
+
+        // 从原文划选文本，切割为新命题（记录字符索引区间）
+        addFromSelection() {
+          const sel = window.getSelection();
+          if (!sel || sel.isCollapsed) { this.$message.warning('请先在原文中划选一段文本'); return; }
+          const text = (sel.toString() || '').trim();
+          if (!text) { this.$message.warning('请先在原文中划选一段文本'); return; }
+          let start = Math.min(sel.anchorOffset, sel.focusOffset);
+          let end = Math.max(sel.anchorOffset, sel.focusOffset);
+          // 校验：若偏移与文本不匹配则回退到 indexOf 定位
+          if (this.original.slice(start, end).trim() !== text) {
+            start = this.original.indexOf(text);
+            if (start < 0) { this.$message.warning('未能在原文中定位到选中文本，请重试'); return; }
+            end = start + text.length;
+          }
+          this.segments.push({ start, end, text });
+          this.segments.sort((a,b)=>a.start-b.start);
+          sel.removeAllRanges();
+          this.$message.success('已切割为新命题');
+        },
+
+        // 智能预切割：按句读标点切分
+        autoSplit() {
+          const re = /[^。；;，,]+[。；;，,]?/g;
+          const arr = [];
+          let m, start = 0;
+          while ((m = re.exec(this.original)) !== null) {
+            const t = m[0].trim();
+            if (t) { arr.push({ start: m.index, end: m.index + m[0].length, text: t }); start = m.index + m[0].length; }
+          }
+          if (arr.length) {
+            this.segments = arr;
+            this.$message.success('已按句读自动预切割 ' + arr.length + ' 段，请人工复核边界');
+          }
+        },
+
+        remove(i) { this.segments.splice(i, 1); this.$message.success('已删除'); },
+        mergeDown(i) {
+          if (i >= this.segments.length - 1) { this.$message.warning('该命题已是最后一条，无法向下合并'); return; }
+          const a = this.segments[i], b = this.segments[i+1];
+          this.segments.splice(i, 2, { start: Math.min(a.start, b.start), end: Math.max(a.end, b.end), text: (a.text + b.text).replace(/[。；;，,]$/, '') + '。' });
+          this.$message.success('已合并相邻命题');
+        },
+        submit() { this.$message.success('切割结果已提交，等待裁定者复核'); },
       }
     };
     createApp(App).use(ElementPlus).mount('#app');
