@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>结果输出 - 裁判文书标注平台</title>
+  <link rel="stylesheet" href="assets/vendor/element-plus.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="layout">
+      
+    <aside class="sidebar">
+      <div class="brand">裁判文书标注平台</div>
+      <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
+               default-active="results.html" style="border-right:none;">
+        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" class="is-active" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+      </el-menu>
+    </aside>
+      
+    <div class="main">
+      <div class="topbar">
+        <div class="title">{{ pageTitle }}</div>
+        <div class="right">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+            <el-option label="任务创建者" value="creator"></el-option>
+            <el-option label="标注员" value="annotator"></el-option>
+            <el-option label="裁定者" value="arbitrator"></el-option>
+          </el-select>
+          <el-tag size="small" type="info">演示账号</el-tag>
+          <el-button size="small" @click="logout">退出</el-button>
+        </div>
+      </div>
+      <div class="content">
+
+        <h2 class="page-title">结果输出</h2>
+        <p class="page-desc">导出标注数据与论证图示（JSON / Excel / PNG / SVG），导出后不可修改</p>
+        <div class="card">
+          <h3 style="margin-top:0">导出内容</h3>
+          <el-checkbox-group v-model="formats">
+            <el-checkbox label="JSON">JSON 标注数据（供模型训练，含字符索引+标签层级+关系）</el-checkbox><br/>
+            <el-checkbox label="Excel">Excel 标注数据（命题列表+标签+关系矩阵）</el-checkbox><br/>
+            <el-checkbox label="PNG">论证图示 PNG</el-checkbox>
+            <el-checkbox label="SVG">论证图示 SVG</el-checkbox>
+          </el-checkbox-group>
+          <div style="margin-top:12px">
+            <el-checkbox v-model="withGuide">附带标注指南文档（版本 v1.2）</el-checkbox>
+          </div>
+          <div style="margin-top:16px"><el-button type="primary" @click="exportData">导出（生成压缩包）</el-button></div>
+          <span class="proto-note">进入结果输出后流程不可回退，导出数据只读（需求 5.2）</span>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">导出记录</h3>
+          <el-table :data="records" border style="width:100%">
+            <el-table-column prop="time" label="导出时间" width="180"></el-table-column>
+            <el-table-column prop="who" label="操作人" width="120"></el-table-column>
+            <el-table-column prop="task" label="任务" min-width="200"></el-table-column>
+            <el-table-column prop="ver" label="指南版本" width="100"></el-table-column>
+            <el-table-column prop="file" label="文件名" min-width="180"></el-table-column>
+          </el-table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="assets/vendor/vue.global.prod.js"></script>
+  <script src="assets/vendor/element-plus.full.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const App = {
+      data() {
+        return {
+          pageTitle: '结果输出',
+          role: 'annotator',
+          
+            formats: ['JSON','Excel'],
+            withGuide: true,
+            records: [
+              { time:'2026-10-05 14:30', who:'张老师', task:'租赁合同纠纷类案标注', ver:'v1.2', file:'results_租赁合同.zip' },
+            ],
+
+        };
+      },
+      methods: {
+        go(p) { location.href = p; },
+        logout() { location.href = 'index.html'; },
+        
+        exportData(){ this.$message.success('已生成压缩包（演示）'); },
+
+      }
+    };
+    createApp(App).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

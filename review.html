@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>冲突解决 - 裁判文书标注平台</title>
+  <link rel="stylesheet" href="assets/vendor/element-plus.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="layout">
+      
+    <aside class="sidebar">
+      <div class="brand">裁判文书标注平台</div>
+      <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
+               default-active="review.html" style="border-right:none;">
+        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" class="is-active" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+      </el-menu>
+    </aside>
+      
+    <div class="main">
+      <div class="topbar">
+        <div class="title">{{ pageTitle }}</div>
+        <div class="right">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+            <el-option label="任务创建者" value="creator"></el-option>
+            <el-option label="标注员" value="annotator"></el-option>
+            <el-option label="裁定者" value="arbitrator"></el-option>
+          </el-select>
+          <el-tag size="small" type="info">演示账号</el-tag>
+          <el-button size="small" @click="logout">退出</el-button>
+        </div>
+      </div>
+      <div class="content">
+
+        <h2 class="page-title">冲突解决</h2>
+        <p class="page-desc">裁定者并排对比多名标注员结果，识别差异并裁定最终版本</p>
+        <div class="card">
+          <el-table :data="diffs" border style="width:100%">
+            <el-table-column prop="item" label="争议点" width="140"></el-table-column>
+            <el-table-column prop="a" label="标注员 A" min-width="180"></el-table-column>
+            <el-table-column prop="b" label="标注员 B" min-width="180"></el-table-column>
+            <el-table-column label="裁定" width="220">
+              <template #default="s">
+                <el-radio-group v-model="s.row.pick" size="small">
+                  <el-radio-button label="A">采纳A</el-radio-button>
+                  <el-radio-button label="B">采纳B</el-radio-button>
+                  <el-radio-button label="R">重标</el-radio-button>
+                </el-radio-group>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div style="margin-top:12px">
+            <el-button type="success">提交最终版本</el-button>
+            <el-button @click="go('compare.html')">查看差异比对</el-button>
+            <span class="proto-note">不一致且需线下讨论的可「提交专家裁决」（Q13）</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="assets/vendor/vue.global.prod.js"></script>
+  <script src="assets/vendor/element-plus.full.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const App = {
+      data() {
+        return {
+          pageTitle: '冲突解决',
+          role: 'annotator',
+          
+            diffs: [
+              { item:'命题 P5 标签', a:'SF 个别事实判断', b:'GM 一般规范判断', pick:'A' },
+              { item:'关系缺失', a:'S(4,6)', b:'（未标注）', pick:'A' },
+              { item:'命题边界', a:'被告应…支付该11000元。', b:'被告应向原告支付该11000元。', pick:'B' },
+            ],
+
+        };
+      },
+      methods: {
+        go(p) { location.href = p; },
+        logout() { location.href = 'index.html'; },
+        
+      }
+    };
+    createApp(App).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

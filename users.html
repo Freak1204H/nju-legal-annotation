@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户管理 - 裁判文书标注平台</title>
+  <link rel="stylesheet" href="assets/vendor/element-plus.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="layout">
+      
+    <aside class="sidebar">
+      <div class="brand">裁判文书标注平台</div>
+      <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
+               default-active="users.html" style="border-right:none;">
+        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" class="is-active" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+      </el-menu>
+    </aside>
+      
+    <div class="main">
+      <div class="topbar">
+        <div class="title">{{ pageTitle }}</div>
+        <div class="right">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+            <el-option label="任务创建者" value="creator"></el-option>
+            <el-option label="标注员" value="annotator"></el-option>
+            <el-option label="裁定者" value="arbitrator"></el-option>
+          </el-select>
+          <el-tag size="small" type="info">演示账号</el-tag>
+          <el-button size="small" @click="logout">退出</el-button>
+        </div>
+      </div>
+      <div class="content">
+
+        <h2 class="page-title">用户管理</h2>
+        <p class="page-desc">管理账号与角色权限（一名用户可身兼多角色，权限取并集）</p>
+        <div class="card">
+          <div style="margin-bottom:12px"><el-button type="primary">新增用户</el-button></div>
+          <el-table :data="users" border style="width:100%">
+            <el-table-column prop="account" label="账号" width="120"></el-table-column>
+            <el-table-column prop="name" label="姓名" width="120"></el-table-column>
+            <el-table-column label="角色" min-width="260">
+              <template #default="s">
+                <el-tag v-for="r in s.row.roles" :key="r" size="small" style="margin-right:4px">{{ roleName(r) }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="140">
+              <template #default="s"><el-button size="small" type="text">编辑</el-button></template>
+            </el-table-column>
+          </el-table>
+          <span class="proto-note gap">需求3：本页仅管账号，缺「学生学习进度 / 一致性统计看板」</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="assets/vendor/vue.global.prod.js"></script>
+  <script src="assets/vendor/element-plus.full.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const App = {
+      data() {
+        return {
+          pageTitle: '用户管理',
+          role: 'annotator',
+          
+            users: [
+              { account:'teacher', name:'张老师', roles:['creator','arbitrator'] },
+              { account:'stu1', name:'张三', roles:['annotator'] },
+              { account:'stu2', name:'李四', roles:['annotator'] },
+              { account:'stu3', name:'赵五', roles:['annotator','arbitrator'] },
+            ],
+
+        };
+      },
+      methods: {
+        go(p) { location.href = p; },
+        logout() { location.href = 'index.html'; },
+        
+        roleName(r){ return {creator:'任务创建者',annotator:'标注员',arbitrator:'裁定者'}[r]||r; },
+
+      }
+    };
+    createApp(App).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

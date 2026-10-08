@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>文本切割 - 裁判文书标注平台</title>
+  <link rel="stylesheet" href="assets/vendor/element-plus.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="layout">
+      
+    <aside class="sidebar">
+      <div class="brand">裁判文书标注平台</div>
+      <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
+               default-active="segment.html" style="border-right:none;">
+        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" class="is-active" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+      </el-menu>
+    </aside>
+      
+    <div class="main">
+      <div class="topbar">
+        <div class="title">{{ pageTitle }}</div>
+        <div class="right">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+            <el-option label="任务创建者" value="creator"></el-option>
+            <el-option label="标注员" value="annotator"></el-option>
+            <el-option label="裁定者" value="arbitrator"></el-option>
+          </el-select>
+          <el-tag size="small" type="info">演示账号</el-tag>
+          <el-button size="small" @click="logout">退出</el-button>
+        </div>
+      </div>
+      <div class="content">
+
+        <h2 class="page-title">文本切割</h2>
+        <p class="page-desc">颗粒度对齐：把「裁判理由」按句号/分号切割成命题单元（对应标注指南 v1.2）</p>
+        <div class="card" style="display:flex; gap:16px">
+          <div style="flex:1; border:1px solid #ebeef5; border-radius:6px; padding:12px; max-height:520px; overflow:auto;">
+            <h4 style="margin:0 0 8px">原文（裁判理由部分）</h4>
+            <p style="line-height:1.9; color:#303133; font-size:13px">{{ original }}</p>
+          </div>
+          <div style="flex:1; border:1px solid #ebeef5; border-radius:6px; padding:12px; max-height:520px; overflow:auto;">
+            <h4 style="margin:0 0 8px">切割结果（命题单元）</h4>
+            <div v-for="(s,i) in segments" :key="i" style="border:1px solid #409eff; background:#ecf5ff; border-radius:4px; padding:8px 10px; margin-bottom:8px;">
+              <el-tag size="small" type="primary">P{{ i+1 }}</el-tag>
+              <span style="font-size:13px">{{ s }}</span>
+            </div>
+            <el-button size="small" type="success" style="margin-top:8px">提交切割结果</el-button>
+          </div>
+        </div>
+        <div class="card"><span class="proto-note">切割需经裁定者复核，二人一致性 > 80% 时定稿（标注指南 3 节）</span></div>
+      </div>
+    </div>
+  </div>
+  <script src="assets/vendor/vue.global.prod.js"></script>
+  <script src="assets/vendor/element-plus.full.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const App = {
+      data() {
+        return {
+          pageTitle: '文本切割',
+          role: 'annotator',
+          
+            original: '本院认为，依法成立的合同，自成立时生效。当事人应当按照约定全面履行自己的义务。当事人一方未支付价款、报酬、租金、利息，或者不履行其他金钱债务的，对方可以请求其支付。本案中，原、被告之间系劳务合同关系，原告已依约提供劳务，被告应按照原、被告之间的约定给付劳务报酬。',
+            segments: [
+              '依法成立的合同，自成立时生效。',
+              '当事人应当按照约定全面履行自己的义务。',
+              '当事人一方未支付价款、报酬、租金、利息，或者不履行其他金钱债务的，对方可以请求其支付。',
+              '本案中，原、被告之间系劳务合同关系，',
+              '原告已依约提供劳务，',
+              '被告应按照原、被告之间的约定给付劳务报酬。',
+            ],
+
+        };
+      },
+      methods: {
+        go(p) { location.href = p; },
+        logout() { location.href = 'index.html'; },
+        
+      }
+    };
+    createApp(App).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

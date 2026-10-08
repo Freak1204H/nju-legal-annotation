@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>创建任务 - 裁判文书标注平台</title>
+  <link rel="stylesheet" href="assets/vendor/element-plus.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="layout">
+      
+    <aside class="sidebar">
+      <div class="brand">裁判文书标注平台</div>
+      <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
+               default-active="task-create.html" style="border-right:none;">
+        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" class="is-active" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+      </el-menu>
+    </aside>
+      
+    <div class="main">
+      <div class="topbar">
+        <div class="title">{{ pageTitle }}</div>
+        <div class="right">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+            <el-option label="任务创建者" value="creator"></el-option>
+            <el-option label="标注员" value="annotator"></el-option>
+            <el-option label="裁定者" value="arbitrator"></el-option>
+          </el-select>
+          <el-tag size="small" type="info">演示账号</el-tag>
+          <el-button size="small" @click="logout">退出</el-button>
+        </div>
+      </div>
+      <div class="content">
+
+        <h2 class="page-title">创建任务</h2>
+        <p class="page-desc">分三步：选择文书 → 配置标签体系 → 分配标注员与裁定者</p>
+        <div class="card">
+          <el-steps :active="step" finish-status="success" align-center style="margin-bottom:24px">
+            <el-step title="选择文书" description="从文书总库批量导入"></el-step>
+            <el-step title="配置标签" description="选定标签体系与指南版本"></el-step>
+            <el-step title="分配成员" description="指定标注员与裁定者"></el-step>
+          </el-steps>
+
+          <div v-if="step===0">
+            <el-table :data="pickedDocs" border style="width:100%" @selection-change="onSelect">
+              <el-table-column type="selection" width="50"></el-table-column>
+              <el-table-column prop="name" label="文书名称" min-width="240"></el-table-column>
+              <el-table-column prop="type" label="案例类型" width="140"></el-table-column>
+              <el-table-column prop="caseNo" label="案号" width="180"></el-table-column>
+            </el-table>
+            <span class="proto-note">普通案例需支持「裁判理由」智能提取或人工校正</span>
+          </div>
+
+          <div v-else-if="step===1">
+            <el-form label-width="120px">
+              <el-form-item label="标签体系">
+                <el-select v-model="tagVersion" style="width:280px">
+                  <el-option label="标注指南 v1.2（当前）" value="v1.2"></el-option>
+                  <el-option label="标注指南 v1.1" value="v1.1"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="关系类型">
+                <el-checkbox-group v-model="relations">
+                  <el-checkbox v-for="r in relList" :key="r" :label="r">{{ r }}</el-checkbox>
+                </el-checkbox-group>
+              </el-form-item>
+            </el-form>
+            <span class="proto-note">任务开始后标签体系锁定、不可增删改（Q3）</span>
+          </div>
+
+          <div v-else>
+            <el-form label-width="120px">
+              <el-form-item label="标注员">
+                <el-select v-model="annotators" multiple style="width:320px">
+                  <el-option v-for="u in users" :key="u" :label="u" :value="u"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="裁定者">
+                <el-select v-model="arbitrator" style="width:320px">
+                  <el-option v-for="u in users" :key="u" :label="u" :value="u"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-form>
+            <span class="proto-note">同一份文书可分配给多名标注员独立标注（多对多）</span>
+          </div>
+
+          <div style="margin-top:20px">
+            <el-button v-if="step>0" @click="step--">上一步</el-button>
+            <el-button type="primary" v-if="step<2" @click="step++">下一步</el-button>
+            <el-button type="success" v-if="step===2" @click="done">创建任务</el-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="assets/vendor/vue.global.prod.js"></script>
+  <script src="assets/vendor/element-plus.full.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const App = {
+      data() {
+        return {
+          pageTitle: '创建任务',
+          role: 'annotator',
+          
+            step: 0,
+            pickedDocs: [],
+            tagVersion: 'v1.2',
+            relations: ['S','A','J','M','I'],
+            relList: ['S 支持','A 反对','J 组合','M 匹配','I 同一'],
+            annotators: [],
+            arbitrator: '',
+            users: ['张三','李四','赵五','王同学'],
+            allDocs: [
+              { name: '余某、徐某劳务合同纠纷一审判决书', type: '普通案例', caseNo: '(2023)苏0106民初18909号' },
+              { name: '上海中原物业诉陶德华居间合同纠纷案', type: '指导性案例', caseNo: '指导案例1号' },
+              { name: '华阴市某合作社诉某服务中心租赁合同纠纷案', type: '参考案例', caseNo: '2025-07-2-111-002' },
+            ],
+
+        };
+      },
+      methods: {
+        go(p) { location.href = p; },
+        logout() { location.href = 'index.html'; },
+        
+        onSelect(rows){ this.pickedDocs = rows; },
+        done(){ this.$message.success('任务创建成功'); setTimeout(()=>location.href='tasks.html', 800); },
+
+      }
+    };
+    createApp(App).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

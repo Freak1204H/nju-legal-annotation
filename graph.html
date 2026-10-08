@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>论证图示 - 裁判文书标注平台</title>
+  <link rel="stylesheet" href="assets/vendor/element-plus.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="layout">
+      
+    <aside class="sidebar">
+      <div class="brand">裁判文书标注平台</div>
+      <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
+               default-active="graph.html" style="border-right:none;">
+        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" class="is-active" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+      </el-menu>
+    </aside>
+      
+    <div class="main">
+      <div class="topbar">
+        <div class="title">{{ pageTitle }}</div>
+        <div class="right">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+            <el-option label="任务创建者" value="creator"></el-option>
+            <el-option label="标注员" value="annotator"></el-option>
+            <el-option label="裁定者" value="arbitrator"></el-option>
+          </el-select>
+          <el-tag size="small" type="info">演示账号</el-tag>
+          <el-button size="small" @click="logout">退出</el-button>
+        </div>
+      </div>
+      <div class="content">
+
+        <h2 class="page-title">论证图示</h2>
+        <p class="page-desc">方框表命题、圆节点表关系；实心圆=支持、空心圆=反对、"+"圆=组合/匹配、框内"/"=同一</p>
+        <div class="card">
+          <div class="arg-graph" style="min-height:360px; position:relative;">
+            <div style="text-align:center; padding-top:20px">
+              <span class="arg-node">p1 系劳务合同关系<el-tag size="mini">SM</el-tag></span>
+              <span class="arg-node">p2 已依约提供劳务<el-tag size="mini">SF</el-tag></span>
+            </div>
+            <div style="text-align:center; margin:10px 0; color:#909399">⊕ 组合 J(1,2) ──▶ 匹配 M(•,P6) ──▶ ● 支持 S</div>
+            <div style="text-align:center">
+              <span class="arg-node conclusion">p3 应向原告支付11000元<el-tag size="mini" type="danger">SM</el-tag></span>
+            </div>
+            <div style="text-align:center; margin-top:30px; border-top:1px dashed #dcdfe6; padding-top:16px">
+              <span class="arg-node">p4 主张另有600元<el-tag size="mini">SF</el-tag></span>
+              <span class="arg-arrow">◄──○</span>
+              <span class="arg-node">p5 证据不足<el-tag size="mini">SF</el-tag></span>
+              <span class="arg-arrow">──▶●</span>
+              <span class="arg-node conclusion">p6 不予支持<el-tag size="mini" type="danger">SM</el-tag></span>
+            </div>
+            <div style="position:absolute; top:8px; right:12px">
+              <el-button size="small">导出 PNG</el-button>
+              <el-button size="small">导出 SVG</el-button>
+            </div>
+          </div>
+          <span class="proto-note">一个文书可能含多个独立论证结构，需支持分图切换（Q 多图支持）</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="assets/vendor/vue.global.prod.js"></script>
+  <script src="assets/vendor/element-plus.full.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const App = {
+      data() {
+        return {
+          pageTitle: '论证图示',
+          role: 'annotator',
+          
+        };
+      },
+      methods: {
+        go(p) { location.href = p; },
+        logout() { location.href = 'index.html'; },
+        
+      }
+    };
+    createApp(App).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

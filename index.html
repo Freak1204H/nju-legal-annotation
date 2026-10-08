@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录 - 裁判文书标注平台</title>
+  <link rel="stylesheet" href="assets/vendor/element-plus.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="login-wrap">
+      <div class="login-card">
+        <h1>裁判文书标注平台</h1>
+        <div class="sub">法律论证结构标注与图示系统 · 原型演示</div>
+        <el-form label-position="top">
+          <el-form-item label="账号">
+            <el-input v-model="username" placeholder="请输入账号" size="large"></el-input>
+          </el-form-item>
+          <el-form-item label="密码">
+            <el-input v-model="password" type="password" placeholder="请输入密码" size="large" show-password></el-input>
+          </el-form-item>
+          <el-button type="primary" size="large" style="width:100%" @click="login">登 录</el-button>
+        </el-form>
+        <el-divider></el-divider>
+        <div class="sub" style="margin-bottom:0">
+          提示：本页为原型演示，<b>任意账号密码</b>点击登录即可进入工作台。<br/>
+          三角色权限说明见「用户管理」页。
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="assets/vendor/vue.global.prod.js"></script>
+  <script src="assets/vendor/element-plus.full.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    createApp({
+      data() { return { username: '', password: '' }; },
+      methods: { login() { location.href = 'dashboard.html'; } }
+    }).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

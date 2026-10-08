@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>切割复核 - 裁判文书标注平台</title>
+  <link rel="stylesheet" href="assets/vendor/element-plus.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="layout">
+      
+    <aside class="sidebar">
+      <div class="brand">裁判文书标注平台</div>
+      <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
+               default-active="segment-review.html" style="border-right:none;">
+        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" class="is-active" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+      </el-menu>
+    </aside>
+      
+    <div class="main">
+      <div class="topbar">
+        <div class="title">{{ pageTitle }}</div>
+        <div class="right">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+            <el-option label="任务创建者" value="creator"></el-option>
+            <el-option label="标注员" value="annotator"></el-option>
+            <el-option label="裁定者" value="arbitrator"></el-option>
+          </el-select>
+          <el-tag size="small" type="info">演示账号</el-tag>
+          <el-button size="small" @click="logout">退出</el-button>
+        </div>
+      </div>
+      <div class="content">
+
+        <h2 class="page-title">切割复核</h2>
+        <p class="page-desc">裁定者比对多名标注员的切割版本，确定统一切割方案</p>
+        <div class="card">
+          <el-table :data="rows" border style="width:100%">
+            <el-table-column prop="idx" label="序号" width="70"></el-table-column>
+            <el-table-column prop="a" label="标注员 A" min-width="200"></el-table-column>
+            <el-table-column prop="b" label="标注员 B" min-width="200"></el-table-column>
+            <el-table-column label="一致性" width="90">
+              <template #default="s">
+                <el-tag size="small" :type="s.row.same?'success':'warning'">{{ s.row.same?'一致':'差异' }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="裁定" width="120">
+              <template #default="s">
+                <el-radio-group v-model="s.row.pick" size="small">
+                  <el-radio-button label="A">A</el-radio-button>
+                  <el-radio-button label="B">B</el-radio-button>
+                </el-radio-group>
+              </template>
+            </el-table-column>
+          </el-table>
+          <div style="margin-top:12px"><el-button type="success">确认切割定稿</el-button></div>
+          <span class="proto-note">切割定稿后，标注员在此基础上进行要素标注（命题/关系）</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="assets/vendor/vue.global.prod.js"></script>
+  <script src="assets/vendor/element-plus.full.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const App = {
+      data() {
+        return {
+          pageTitle: '切割复核',
+          role: 'annotator',
+          
+            rows: [
+              { idx:'P1', a:'依法成立的合同，自成立时生效。', b:'依法成立的合同，自成立时生效。', same:true, pick:'A' },
+              { idx:'P2', a:'当事人应当按照约定全面履行自己的义务。', b:'当事人应当按照约定全面履行自己的义务。', same:true, pick:'A' },
+              { idx:'P3', a:'当事人一方未支付价款、报酬、租金、利息…的，对方可以请求其支付。', b:'当事人一方未支付价款、报酬…的，对方可以请求其支付。', same:false, pick:'A' },
+            ],
+
+        };
+      },
+      methods: {
+        go(p) { location.href = p; },
+        logout() { location.href = 'index.html'; },
+        
+      }
+    };
+    createApp(App).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

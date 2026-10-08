@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>标注工作台 - 裁判文书标注平台</title>
+  <link rel="stylesheet" href="assets/vendor/element-plus.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="layout">
+      
+    <aside class="sidebar">
+      <div class="brand">裁判文书标注平台</div>
+      <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
+               default-active="annotate.html" style="border-right:none;">
+        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" class="is-active" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+      </el-menu>
+    </aside>
+      
+    <div class="main">
+      <div class="topbar">
+        <div class="title">{{ pageTitle }}</div>
+        <div class="right">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+            <el-option label="任务创建者" value="creator"></el-option>
+            <el-option label="标注员" value="annotator"></el-option>
+            <el-option label="裁定者" value="arbitrator"></el-option>
+          </el-select>
+          <el-tag size="small" type="info">演示账号</el-tag>
+          <el-button size="small" @click="logout">退出</el-button>
+        </div>
+      </div>
+      <div class="content">
+
+        <h2 class="page-title">标注工作台</h2>
+        <p class="page-desc">三栏布局：左=原文+命题列表 · 中=操作区 · 右=论证图示（双向联动）</p>
+        <div style="display:flex; gap:12px; height:calc(100vh - 180px);">
+          <!-- 左栏：原文 + 命题列表 -->
+          <div style="flex:1.2; display:flex; flex-direction:column; gap:12px; min-width:0;">
+            <div class="card" style="flex:1; overflow:auto; margin-bottom:0;">
+              <h4 style="margin:0 0 8px">原文（裁判理由）</h4>
+              <p style="line-height:2; font-size:13px; color:#303133; margin:0">
+                <template v-for="(seg,i) in segments" :key="i">
+                  <span :style="sel===i?'background:#ffd666;padding:2px 1px;border-radius:3px':''" @click="sel=i">{{ seg }}</span>
+                </template>
+              </p>
+              <div style="margin-top:10px"><el-button size="small" @click="newProp">新建命题（先选文本再选标签）</el-button></div>
+            </div>
+            <div class="card" style="flex:1; overflow:auto; margin-bottom:0;">
+              <h4 style="margin:0 0 8px">命题列表</h4>
+              <el-table :data="props" border size="small" style="width:100%">
+                <el-table-column prop="idx" label="#" width="50"></el-table-column>
+                <el-table-column prop="text" label="命题内容" min-width="160"></el-table-column>
+                <el-table-column prop="tag" label="标签" width="90">
+                  <template #default="s"><el-tag size="small" :type="tagType(s.row.tag)">{{ s.row.tag }}</el-tag></template>
+                </el-table-column>
+                <el-table-column label="操作" width="80">
+                  <template #default="s"><el-button size="small" type="text" @click="delProp(s.$index)">删除</el-button></template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+          <!-- 中栏：操作区 -->
+          <div class="card" style="flex:0.8; min-width:220px; margin-bottom:0; overflow:auto;">
+            <h4 style="margin:0 0 8px">标签选择（一级）</h4>
+            <el-radio-group v-model="tag1" size="small" style="display:flex; flex-direction:column; gap:6px">
+              <el-radio-button label="SF" style="margin:0">SF 个别事实判断</el-radio-button>
+              <el-radio-button label="GF" style="margin:0">GF 一般事实判断</el-radio-button>
+              <el-radio-button label="SM" style="margin:0">SM 个别规范判断</el-radio-button>
+              <el-radio-button label="GM" style="margin:0">GM 一般规范判断</el-radio-button>
+            </el-radio-group>
+            <template v-if="tag1==='GM'">
+              <h4 style="margin:12px 0 8px">二级标签（GM 子类）</h4>
+              <el-select v-model="tag2" size="small" style="width:100%">
+                <el-option v-for="t in tag2list" :key="t" :label="t" :value="t"></el-option>
+              </el-select>
+            </template>
+            <h4 style="margin:12px 0 8px">关系标注</h4>
+            <el-select v-model="relType" size="small" style="width:100%">
+              <el-option v-for="r in relList" :key="r" :label="r" :value="r"></el-option>
+            </el-select>
+            <div style="margin:10px 0">
+              <el-button size="small" type="primary" @click="addRel">建立关系</el-button>
+            </div>
+            <el-divider></el-divider>
+            <h4 style="margin:0 0 8px">已建关系</h4>
+            <el-tag v-for="(r,i) in rels" :key="i" size="small" style="margin:2px">{{ r }}</el-tag>
+            <div style="margin-top:16px">
+              <el-button type="success" size="small" @click="save">保存标注</el-button>
+              <el-button size="small">撤销/重做</el-button>
+            </div>
+            <div style="margin-top:10px"><span class="proto-note">支持「先建命题后补标签」两步操作</span></div>
+          </div>
+          <!-- 右栏：论证图示 -->
+          <div class="card" style="flex:1; margin-bottom:0; overflow:auto;">
+            <h4 style="margin:0 0 8px">论证图示（实时联动）</h4>
+            <div class="arg-graph">
+              <div style="text-align:center">
+                <span class="arg-node" v-for="(p,i) in props" :key="i">p{{ i+1 }}</span>
+              </div>
+              <div style="text-align:center; margin-top:8px">
+                <span class="arg-rel">{{ rels.length ? rels[0] : 'S(1,2)' }}</span>
+                <el-button size="mini" text type="primary" @click="go('graph.html')">查看大图 →</el-button>
+              </div>
+            </div>
+            <div style="margin-top:10px"><span class="proto-note">标注区改动 → 图示自动更新；图示拖拽 → 同步回数据</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="assets/vendor/vue.global.prod.js"></script>
+  <script src="assets/vendor/element-plus.full.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const App = {
+      data() {
+        return {
+          pageTitle: '标注工作台',
+          role: 'annotator',
+          
+            sel: 3,
+            segments: [
+              '本案中，原、被告之间系劳务合同关系，','原告已依约提供劳务，',
+              '被告应按照原、被告之间的约定给付劳务报酬。','被告尚欠原告劳务报酬11000元，',
+              '被告应向原告支付该11000元。',
+            ],
+            props: [
+              { idx:1, text:'原、被告之间系劳务合同关系', tag:'SM' },
+              { idx:2, text:'原告已依约提供劳务', tag:'SF' },
+              { idx:3, text:'被告应向原告支付该11000元', tag:'SM' },
+            ],
+            tag1: 'SM', tag2: '', tag2list: ['GM-L 法律条文','GM-I 法律解释','GM-C 合同及合同解释','GM-U 习惯与行业惯例','GM-M 道德与价值观念','GM-O 其他'],
+            relType: 'S 支持关系', relList: ['S 支持关系','A 反对关系','J 组合关系','M 匹配关系','I 同一关系'],
+            rels: ['S(J(1,2),3)'],
+
+        };
+      },
+      methods: {
+        go(p) { location.href = p; },
+        logout() { location.href = 'index.html'; },
+        
+        tagType(t){ return {SF:'info',GF:'info',SM:'warning',GM:'primary'}[t]||'info'; },
+        newProp(){ this.props.push({ idx:this.props.length+1, text:this.segments[this.sel], tag:this.tag1||'待定' }); this.$message.success('命题已创建'); },
+        delProp(i){ this.props.splice(i,1); },
+        addRel(){ this.rels.push(this.relType.split(' ')[0]+'('+this.props.length+')'); this.$message.success('关系已建立'); },
+        save(){ this.$message.success('标注已保存'); },
+
+      }
+    };
+    createApp(App).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>

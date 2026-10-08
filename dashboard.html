@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>工作台 - 裁判文书标注平台</title>
+  <link rel="stylesheet" href="assets/vendor/element-plus.css" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="layout">
+      
+    <aside class="sidebar">
+      <div class="brand">裁判文书标注平台</div>
+      <el-menu background-color="#001529" text-color="#c0c4cc" active-text-color="#409eff"
+               default-active="dashboard.html" style="border-right:none;">
+        <el-menu-item-group title="总览"><el-menu-item index="dashboard.html" class="is-active" @click="go('dashboard.html')">工作台</el-menu-item></el-menu-item-group><el-menu-item-group title="任务"><el-menu-item index="tasks.html" @click="go('tasks.html')">任务管理</el-menu-item><el-menu-item index="task-create.html" @click="go('task-create.html')">创建任务</el-menu-item><el-menu-item index="documents.html" @click="go('documents.html')">文书总库</el-menu-item></el-menu-item-group><el-menu-item-group title="标注"><el-menu-item index="segment.html" @click="go('segment.html')">文本切割</el-menu-item><el-menu-item index="segment-review.html" @click="go('segment-review.html')">切割复核</el-menu-item><el-menu-item index="annotate.html" @click="go('annotate.html')">标注工作台</el-menu-item><el-menu-item index="graph.html" @click="go('graph.html')">论证图示</el-menu-item></el-menu-item-group><el-menu-item-group title="裁定"><el-menu-item index="review.html" @click="go('review.html')">冲突解决</el-menu-item><el-menu-item index="compare.html" @click="go('compare.html')">差异比对</el-menu-item></el-menu-item-group><el-menu-item-group title="输出"><el-menu-item index="results.html" @click="go('results.html')">结果输出</el-menu-item></el-menu-item-group><el-menu-item-group title="管理"><el-menu-item index="configs.html" @click="go('configs.html')">配置中心</el-menu-item><el-menu-item index="users.html" @click="go('users.html')">用户管理</el-menu-item></el-menu-item-group>
+      </el-menu>
+    </aside>
+      
+    <div class="main">
+      <div class="topbar">
+        <div class="title">{{ pageTitle }}</div>
+        <div class="right">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+            <el-option label="任务创建者" value="creator"></el-option>
+            <el-option label="标注员" value="annotator"></el-option>
+            <el-option label="裁定者" value="arbitrator"></el-option>
+          </el-select>
+          <el-tag size="small" type="info">演示账号</el-tag>
+          <el-button size="small" @click="logout">退出</el-button>
+        </div>
+      </div>
+      <div class="content">
+
+        <h2 class="page-title">工作台</h2>
+        <p class="page-desc">总览当前标注任务的进度与统计</p>
+        <div class="stat-row">
+          <div class="stat-card"><div class="num">{{ stats.tasks }}</div><div class="label">进行中任务</div></div>
+          <div class="stat-card"><div class="num">{{ stats.documents }}</div><div class="label">待标注文书</div></div>
+          <div class="stat-card"><div class="num">{{ stats.review }}</div><div class="label">待裁定文书</div></div>
+          <div class="stat-card"><div class="num">{{ stats.done }}</div><div class="label">已完成导出</div></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">快捷入口</h3>
+          <el-button type="primary" @click="go('task-create.html')">创建任务</el-button>
+          <el-button @click="go('segment.html')">开始文本切割</el-button>
+          <el-button @click="go('annotate.html')">进入标注工作台</el-button>
+          <el-button @click="go('review.html')">进入冲突解决</el-button>
+          <span class="proto-note">首页是否展示「教学/学习」入口（需求2、3）待确认</span>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">最近任务</h3>
+          <el-table :data="recent" border style="width:100%">
+            <el-table-column prop="name" label="任务名称"></el-table-column>
+            <el-table-column prop="stage" label="当前阶段" width="120"></el-table-column>
+            <el-table-column prop="owner" label="创建人" width="120"></el-table-column>
+            <el-table-column label="操作" width="120">
+              <template #default="scope"><el-button size="small" type="text">进入</el-button></template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="assets/vendor/vue.global.prod.js"></script>
+  <script src="assets/vendor/element-plus.full.min.js"></script>
+  <script>
+    const { createApp } = Vue;
+    const App = {
+      data() {
+        return {
+          pageTitle: '工作台',
+          role: 'annotator',
+          
+            stats: { tasks: 6, documents: 42, review: 11, done: 18 },
+            recent: [
+              { name: '劳务合同纠纷类案标注（第一批）', stage: '标注中', owner: '张老师' },
+              { name: '居间合同"跳单"案例标注', stage: '冲突解决', owner: '张老师' },
+              { name: '租赁合同纠纷类案标注', stage: '已导出', owner: '李老师' },
+            ],
+
+        };
+      },
+      methods: {
+        go(p) { location.href = p; },
+        logout() { location.href = 'index.html'; },
+        
+      }
+    };
+    createApp(App).use(ElementPlus).mount('#app');
+  </script>
+</body>
+</html>
