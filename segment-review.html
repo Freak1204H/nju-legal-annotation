@@ -137,6 +137,14 @@
             { idx:'P4', a:'本案中，原、被告之间系劳务合同关系，', b:'本案中，原、被告之间系劳务合同关系', same:false, pick:'R', final:'' },
             { idx:'P5', a:'原告已依约提供劳务，', b:'原告已依约提供劳务，', same:true,  pick:'A', final:'' },
           ],
+          role: localStorage.getItem('demoRole') || 'annotator',
+
+            rows: [
+              { idx:'P1', a:'依法成立的合同，自成立时生效。', b:'依法成立的合同，自成立时生效。', same:true, pick:'A' },
+              { idx:'P2', a:'当事人应当按照约定全面履行自己的义务。', b:'当事人应当按照约定全面履行自己的义务。', same:true, pick:'A' },
+              { idx:'P3', a:'当事人一方未支付价款、报酬、租金、利息…的，对方可以请求其支付。', b:'当事人一方未支付价款、报酬…的，对方可以请求其支付。', same:false, pick:'A' },
+            ],
+
         };
       },
       computed: {
@@ -149,6 +157,9 @@
         hasUnresolved() {
           return this.rows.some(r => r.pick === 'R' && !(r.final || '').trim());
         },
+      },
+      computed: {
+
       },
       methods: {
         go(p) { location.href = p; },

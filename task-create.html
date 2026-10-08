@@ -37,19 +37,28 @@
         <h2 class="page-title">创建任务</h2>
         <p class="page-desc">分三步：选择文书 → 配置标签体系 → 分配标注员与裁定者</p>
         <div class="card">
-          <el-steps :active="step" finish-status="success" align-center style="margin-bottom:24px">
+          <el-form label-width="90px" style="margin-bottom:4px">
+            <el-form-item label="任务名称">
+              <el-input v-model="taskName" placeholder="如：劳务合同纠纷类案标注（第二批）" style="width:420px"></el-input>
+            </el-form-item>
+            <el-form-item label="截止时间">
+              <el-date-picker v-model="deadline" type="date" placeholder="选择日期" style="width:220px"></el-date-picker>
+            </el-form-item>
+          </el-form>
+          <el-steps :active="step" finish-status="success" align-center style="margin:16px 0 24px">
             <el-step title="选择文书" description="从文书总库批量导入"></el-step>
             <el-step title="配置标签" description="选定标签体系与指南版本"></el-step>
             <el-step title="分配成员" description="指定标注员与裁定者"></el-step>
           </el-steps>
 
           <div v-if="step===0">
-            <el-table :data="pickedDocs" border style="width:100%" @selection-change="onSelect">
+            <el-table :data="allDocs" border style="width:100%" @selection-change="onSelect">
               <el-table-column type="selection" width="50"></el-table-column>
               <el-table-column prop="name" label="文书名称" min-width="240"></el-table-column>
               <el-table-column prop="type" label="案例类型" width="140"></el-table-column>
               <el-table-column prop="caseNo" label="案号" width="180"></el-table-column>
             </el-table>
+            <div style="margin-top:8px; color:#909399; font-size:13px">已选 {{ pickedDocs.length }} 份文书</div>
             <span class="proto-note">普通案例需支持「裁判理由」智能提取或人工校正</span>
           </div>
 
@@ -103,9 +112,11 @@
       data() {
         return {
           pageTitle: '创建任务',
-          role: 'annotator',
+          role: localStorage.getItem('demoRole') || 'annotator',
           
             step: 0,
+            taskName: '',
+            deadline: null,
             pickedDocs: [],
             tagVersion: 'v1.2',
             relations: ['S','A','J','M','I'],
@@ -121,12 +132,15 @@
 
         };
       },
+      computed: {
+        
+      },
       methods: {
         go(p) { location.href = p; },
         logout() { location.href = 'index.html'; },
         
         onSelect(rows){ this.pickedDocs = rows; },
-        done(){ this.$message.success('任务创建成功'); setTimeout(()=>location.href='tasks.html', 800); },
+        done(){ this.$message.success('任务「' + (this.taskName || '未命名') + '」创建成功'); setTimeout(()=>location.href='tasks.html', 800); },
 
       }
     };

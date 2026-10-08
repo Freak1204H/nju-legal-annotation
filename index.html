@@ -10,7 +10,7 @@
 <body>
   <div id="app">
     <div class="login-wrap">
-      <div class="login-card">
+      <div class="login-card" style="width:440px">
         <h1>裁判文书标注平台</h1>
         <div class="sub">法律论证结构标注与图示系统 · 原型演示</div>
         <el-form label-position="top">
@@ -22,9 +22,14 @@
           </el-form-item>
           <el-button type="primary" size="large" style="width:100%" @click="login">登 录</el-button>
         </el-form>
+        <el-divider>或 以演示角色快速进入</el-divider>
+        <div style="display:flex; gap:10px">
+          <el-button v-for="r in roles" :key="r.value" style="flex:1" @click="enter(r.value)">{{ r.label }}</el-button>
+        </div>
         <el-divider></el-divider>
-        <div class="sub" style="margin-bottom:0">
-          提示：本页为原型演示，<b>任意账号密码</b>点击登录即可进入工作台。<br/>
+        <div class="sub" style="margin-bottom:0; text-align:left; line-height:1.9">
+          覆盖「创建任务 → 标注 → 冲突解决 → 结果输出」四阶段流程。<br/>
+          本页为原型演示，<b>任意账号密码</b>点击登录即可进入工作台；<br/>
           三角色权限说明见「用户管理」页。
         </div>
       </div>
@@ -35,8 +40,18 @@
   <script>
     const { createApp } = Vue;
     createApp({
-      data() { return { username: '', password: '' }; },
-      methods: { login() { location.href = 'dashboard.html'; } }
+      data() { return {
+        username: '', password: '',
+        roles: [
+          { label: '任务创建者', value: 'creator' },
+          { label: '标注员', value: 'annotator' },
+          { label: '裁定者', value: 'arbitrator' },
+        ],
+      }; },
+      methods: {
+        login() { location.href = 'dashboard.html'; },
+        enter(role) { localStorage.setItem('demoRole', role); location.href = 'dashboard.html'; }
+      }
     }).use(ElementPlus).mount('#app');
   </script>
 </body>

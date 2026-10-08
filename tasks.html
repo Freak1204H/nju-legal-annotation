@@ -37,22 +37,33 @@
         <h2 class="page-title">任务管理</h2>
         <p class="page-desc">管理标注任务的生命周期（创建 → 标注 → 冲突解决 → 结果输出）</p>
         <div class="card">
-          <div style="margin-bottom:12px">
+          <div style="margin-bottom:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap">
             <el-button type="primary" @click="go('task-create.html')">新建任务</el-button>
-            <el-input v-model="kw" placeholder="搜索任务名称" style="width:240px" size="default" clearable></el-input>
+            <el-radio-group v-model="filter" size="small">
+              <el-radio-button label="全部">全部</el-radio-button>
+              <el-radio-button label="标注中">标注中</el-radio-button>
+              <el-radio-button label="冲突解决">冲突解决</el-radio-button>
+              <el-radio-button label="结果输出">结果输出</el-radio-button>
+            </el-radio-group>
+            <el-input v-model="kw" placeholder="搜索任务名称" style="width:200px" clearable></el-input>
           </div>
-          <el-table :data="tasks" border style="width:100%">
+          <el-table :data="filteredTasks" border style="width:100%">
             <el-table-column prop="name" label="任务名称" min-width="200"></el-table-column>
             <el-table-column prop="stage" label="阶段" width="110">
               <template #default="s"><el-tag :type="stageType(s.row.stage)" size="small">{{ s.row.stage }}</el-tag></template>
             </el-table-column>
+            <el-table-column label="进度" width="160">
+              <template #default="s"><el-progress :percentage="s.row.progress" :stroke-width="8"></el-progress></template>
+            </el-table-column>
             <el-table-column prop="docs" label="文书数" width="80"></el-table-column>
+            <el-table-column prop="deadline" label="截止时间" width="120"></el-table-column>
             <el-table-column prop="annotators" label="标注员" width="120"></el-table-column>
             <el-table-column prop="arbitrator" label="裁定者" width="100"></el-table-column>
-            <el-table-column label="操作" width="140">
+            <el-table-column label="操作" width="170">
               <template #default="s">
                 <el-button size="small" type="text" @click="go('annotate.html')">标注</el-button>
                 <el-button size="small" type="text" @click="go('review.html')">裁定</el-button>
+                <el-button size="small" type="text" @click="go('results.html')">导出</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -68,16 +79,27 @@
       data() {
         return {
           pageTitle: '任务管理',
-          role: 'annotator',
+          role: localStorage.getItem('demoRole') || 'annotator',
           
             kw: '',
+            filter: '全部',
             tasks: [
-              { name: '劳务合同纠纷类案标注（第一批）', stage: '标注中', docs: 20, annotators: '张三、李四', arbitrator: '王老师' },
-              { name: '居间合同"跳单"案例标注', stage: '冲突解决', docs: 8, annotators: '张三、李四', arbitrator: '王老师' },
-              { name: '租赁合同纠纷类案标注', stage: '结果输出', docs: 14, annotators: '赵五、李四', arbitrator: '王老师' },
+              { name: '劳务合同纠纷类案标注（第一批）', stage: '标注中', progress: 65, docs: 20, deadline: '2026-10-20', annotators: '张三、李四', arbitrator: '王老师' },
+              { name: '居间合同"跳单"案例标注', stage: '冲突解决', progress: 40, docs: 8, deadline: '2026-10-18', annotators: '张三、李四', arbitrator: '王老师' },
+              { name: '租赁合同纠纷类案标注', stage: '结果输出', progress: 100, docs: 14, deadline: '2026-10-12', annotators: '赵五、李四', arbitrator: '王老师' },
             ],
 
         };
+      },
+      computed: {
+        
+        filteredTasks() {
+          let list = this.tasks;
+          if (this.filter !== '全部') list = list.filter(t => t.stage === this.filter);
+          if (this.kw) list = list.filter(t => t.name.includes(this.kw));
+          return list;
+        },
+
       },
       methods: {
         go(p) { location.href = p; },

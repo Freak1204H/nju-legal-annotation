@@ -169,7 +169,12 @@
               ],
             },
           ],
+          role: localStorage.getItem('demoRole') || 'annotator',
+
         };
+      },
+      computed: {
+
       },
       computed: {
         g() { return this.graphs[this.active]; },

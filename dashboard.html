@@ -48,7 +48,30 @@
           <el-button @click="go('segment.html')">开始文本切割</el-button>
           <el-button @click="go('annotate.html')">进入标注工作台</el-button>
           <el-button @click="go('review.html')">进入冲突解决</el-button>
-          <span class="proto-note">首页是否展示「教学/学习」入口（需求2、3）待确认</span>
+        </div>
+        <div style="display:flex; gap:16px; flex-wrap:wrap">
+          <div class="card" style="flex:1; min-width:340px; margin-bottom:16px">
+            <h3 style="margin-top:0">我的待办</h3>
+            <el-table :data="todos" size="small" border style="width:100%">
+              <el-table-column prop="type" label="类型" width="90">
+                <template #default="s"><el-tag size="small" :type="todoType(s.row.type)">{{ s.row.type }}</el-tag></template>
+              </el-table-column>
+              <el-table-column prop="task" label="任务" min-width="140"></el-table-column>
+              <el-table-column prop="count" label="数量" width="70"></el-table-column>
+              <el-table-column label="操作" width="90">
+                <template #default="s"><el-button size="small" type="text" @click="go(s.row.link)">去处理</el-button></template>
+              </el-table-column>
+            </el-table>
+          </div>
+          <div class="card" style="flex:1; min-width:340px; margin-bottom:16px">
+            <h3 style="margin-top:0">任务整体进度</h3>
+            <div v-for="p in progress" :key="p.name" style="margin-bottom:14px">
+              <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px">
+                <span>{{ p.name }}</span><span style="color:#909399">{{ p.percent }}%</span>
+              </div>
+              <el-progress :percentage="p.percent" :stroke-width="10"></el-progress>
+            </div>
+          </div>
         </div>
         <div class="card">
           <h3 style="margin-top:0">最近任务</h3>
@@ -60,6 +83,7 @@
               <template #default="scope"><el-button size="small" type="text">进入</el-button></template>
             </el-table-column>
           </el-table>
+          <span class="proto-note">首页是否展示「教学/学习」入口（需求2、3）待确认</span>
         </div>
       </div>
     </div>
@@ -72,9 +96,19 @@
       data() {
         return {
           pageTitle: '工作台',
-          role: 'annotator',
+          role: localStorage.getItem('demoRole') || 'annotator',
           
             stats: { tasks: 6, documents: 42, review: 11, done: 18 },
+            todos: [
+              { type: '标注', task: '劳务合同纠纷类案标注（第一批）', count: 20, link: 'annotate.html' },
+              { type: '裁定', task: '居间合同"跳单"案例标注', count: 8, link: 'review.html' },
+              { type: '切割复核', task: '租赁合同纠纷类案标注', count: 14, link: 'segment-review.html' },
+            ],
+            progress: [
+              { name: '劳务合同纠纷类案标注', percent: 65 },
+              { name: '居间合同"跳单"案例标注', percent: 40 },
+              { name: '租赁合同纠纷类案标注', percent: 100 },
+            ],
             recent: [
               { name: '劳务合同纠纷类案标注（第一批）', stage: '标注中', owner: '张老师' },
               { name: '居间合同"跳单"案例标注', stage: '冲突解决', owner: '张老师' },
@@ -83,10 +117,15 @@
 
         };
       },
+      computed: {
+        
+      },
       methods: {
         go(p) { location.href = p; },
         logout() { location.href = 'index.html'; },
         
+        todoType(t){ return {标注:'primary',裁定:'warning','切割复核':'info'}[t]||'info'; },
+
       }
     };
     createApp(App).use(ElementPlus).mount('#app');
