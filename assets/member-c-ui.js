@@ -10,6 +10,7 @@
       try{state=C.load(localStorage)||state;}catch(e){error=e.message;}
       try{const raw=localStorage.getItem(ARCHIVES);const saved=raw?JSON.parse(raw):[];if(!Array.isArray(saved))throw Error('任务存档格式错误');saved.forEach(C.validateState);archives=saved;}
       catch(e){error+=(error?'；':'')+'任务存档读取失败：'+e.message;}
+      C.diff(state.dataset).forEach(d=>{if(!Object.hasOwn(state.decisions,d.key))state.decisions[d.key]={pick:'',note:'',deferred:false};});
       return {state,archives,error,storageSnapshot:localStorage.getItem(C.KEY),operator:'演示裁定者',filter:'all',statusFilter:'all',search:'',editing:null,form:{},dialog:false,
         formats:['JSON','Excel'],withGuide:false,guide:null,busy:false,graphUrl:'',savedAt:'',archiveIndex:null};
     },
