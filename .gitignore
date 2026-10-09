@@ -1,0 +1,14 @@
+# IDE / 编辑器个人配置
+.idea/
+.vscode/
+*.iml
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 本地数据 / 备份
+*.local.json
+*.bak
+node_modules/
