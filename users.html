@@ -23,7 +23,7 @@
       <div class="topbar">
         <div class="title">{{ pageTitle }}</div>
         <div class="right">
-          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色" @change="setRole">
             <el-option label="任务创建者" value="creator"></el-option>
             <el-option label="标注员" value="annotator"></el-option>
             <el-option label="裁定者" value="arbitrator"></el-option>
@@ -35,23 +35,47 @@
       <div class="content">
 
         <h2 class="page-title">用户管理</h2>
-        <p class="page-desc">管理账号与角色权限（一名用户可身兼多角色，权限取并集）</p>
+        <p class="page-desc">管理账号权限，并为文书追加或调整标注人员。一个人可以同时承担多个角色。</p>
         <div class="card">
-          <div style="margin-bottom:12px"><el-button type="primary">新增用户</el-button></div>
+          <div v-if="canManage" style="margin-bottom:14px"><el-button type="primary" @click="openUser()">新增用户</el-button></div>
           <el-table :data="users" border style="width:100%">
-            <el-table-column prop="account" label="账号" width="120"></el-table-column>
-            <el-table-column prop="name" label="姓名" width="120"></el-table-column>
-            <el-table-column label="角色" min-width="260">
-              <template #default="s">
-                <el-tag v-for="r in s.row.roles" :key="r" size="small" style="margin-right:4px">{{ roleName(r) }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="140">
-              <template #default="s"><el-button size="small" type="text">编辑</el-button></template>
-            </el-table-column>
+            <el-table-column prop="account" label="账号" width="130"></el-table-column>
+            <el-table-column prop="name" label="姓名" width="130"></el-table-column>
+            <el-table-column label="角色" min-width="260"><template #default="s"><el-tag v-for="r in s.row.roles" :key="r" size="small" style="margin-right:5px">{{ roleName(r) }}</el-tag></template></el-table-column>
+            <el-table-column label="状态" width="100"><template #default="s"><el-tag :type="s.row.active?'success':'info'">{{ s.row.active?'启用':'停用' }}</el-tag></template></el-table-column>
+            <el-table-column v-if="canManage" label="操作" width="160"><template #default="s"><el-button link type="primary" @click="openUser(s.row)">编辑</el-button><el-popconfirm :title="s.row.active?'停用后将从任务人员中移除，确定继续？':'确定启用该账号？'" @confirm="toggleUser(s.row)"><template #reference><el-button link :type="s.row.active?'danger':'success'">{{ s.row.active?'停用':'启用' }}</el-button></template></el-popconfirm></template></el-table-column>
           </el-table>
-          <span class="proto-note gap">需求3：本页仅管账号，缺「学生学习进度 / 一致性统计看板」</span>
         </div>
+        <div class="card">
+          <h3 style="margin-top:0">文书人员调整</h3>
+          <p style="font-size:13px;color:#606266">同一文书可分配给多名标注员；任务开始后可追加人员。此处演示分配记录，任务页尚未读取这些记录。</p>
+          <el-select v-model="selectedDoc" placeholder="选择文书" style="width:min(100%,480px);margin-bottom:16px" @change="loadAssignment">
+            <el-option v-for="d in docs" :key="d.id" :label="d.name" :value="d.id"></el-option>
+          </el-select>
+          <template v-if="selectedDoc">
+            <el-form label-width="100px">
+              <el-form-item label="标注员"><el-select v-model="assignForm.annotators" :disabled="!canManage" multiple filterable style="width:min(100%,480px)" placeholder="可选择多人"><el-option v-for="u in annotators" :key="u.account" :label="u.name+' ('+u.account+')'" :value="u.account"></el-option></el-select></el-form-item>
+              <el-form-item label="裁定者"><el-select v-model="assignForm.arbitrators" :disabled="!canManage" multiple filterable style="width:min(100%,480px)" placeholder="可选择多人"><el-option v-for="u in arbitrators" :key="u.account" :label="u.name+' ('+u.account+')'" :value="u.account"></el-option></el-select></el-form-item>
+            </el-form>
+            <el-button v-if="canManage" type="primary" @click="saveAssignment">保存人员分配</el-button>
+          </template>
+          <el-empty v-else description="请先选择文书；若列表为空，请到文书总库导入"></el-empty>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">角色权限说明</h3>
+          <el-table :data="permissions" border style="width:100%"><el-table-column prop="name" label="角色" width="150"></el-table-column><el-table-column prop="scope" label="权限范围"></el-table-column></el-table>
+          <p style="font-size:13px;color:#909399">教师标准样例与学生独立练习位于文书总库。原始需求没有明确要求学习进度统计。</p>
+          <el-link type="primary" href="documents.html?view=samples">进入教师标准样例 →</el-link>
+        </div>
+        <el-dialog v-model="userDialog" :title="userForm.originalAccount?'编辑用户':'新增用户'" width="520px">
+          <el-form label-width="80px">
+            <el-form-item label="账号"><el-input v-model="userForm.account" :disabled="!!userForm.originalAccount"></el-input></el-form-item>
+            <el-form-item label="姓名"><el-input v-model="userForm.name"></el-input></el-form-item>
+            <el-form-item label="角色"><el-checkbox-group v-model="userForm.roles"><el-checkbox label="creator">任务创建者</el-checkbox><el-checkbox label="annotator">标注员</el-checkbox><el-checkbox label="arbitrator">裁定者</el-checkbox></el-checkbox-group></el-form-item>
+            <el-form-item label="状态"><el-switch v-model="userForm.active" active-text="启用"></el-switch></el-form-item>
+          </el-form>
+          <template #footer><el-button @click="userDialog=false">取消</el-button><el-button type="primary" @click="saveUser">保存</el-button></template>
+        </el-dialog>
       </div>
     </div>
   </div>
@@ -63,28 +87,49 @@
       data() {
         return {
           pageTitle: '用户管理',
-          role: localStorage.getItem('demoRole') || 'annotator',
+          role: localStorage.getItem('demoRole') || 'creator',
           
-            users: [
-              { account:'teacher', name:'张老师', roles:['creator','arbitrator'] },
-              { account:'stu1', name:'张三', roles:['annotator'] },
-              { account:'stu2', name:'李四', roles:['annotator'] },
-              { account:'stu3', name:'赵五', roles:['annotator','arbitrator'] },
-            ],
+          users: load('memberD.users', [
+            {account:'teacher',name:'张老师',roles:['creator','arbitrator'],active:true},
+            {account:'stu1',name:'张三',roles:['annotator'],active:true},
+            {account:'stu2',name:'李四',roles:['annotator'],active:true},
+            {account:'stu3',name:'赵五',roles:['annotator','arbitrator'],active:true}
+          ]),
+          docs: load('memberD.docs', [
+            {id:'d1',name:'余某、徐某劳务合同纠纷一审判决书'},
+            {id:'d2',name:'上海中原物业诉陶德华居间合同纠纷案'}
+          ]),
+          assignments: load('memberD.assignments', {}), selectedDoc:'',
+          assignForm:{annotators:[],arbitrators:[]}, userDialog:false,userForm:{roles:[]},
+          permissions:[
+            {name:'任务创建者',scope:'上传文书、配置标签和指南、分配任务及授予相应权限'},
+            {name:'标注员',scope:'查看和标注分配给自己的文书'},
+            {name:'裁定者',scope:'查看各标注版本并确认最终结果'}
+          ],
 
         };
       },
       computed: {
-        
+        canManage(){ return this.role==='creator'; },
+        annotators(){ return this.users.filter(u=>u.active&&u.roles.includes('annotator')); },
+        arbitrators(){ return this.users.filter(u=>u.active&&u.roles.includes('arbitrator')); }
       },
+      mounted(){ if(this.docs.length){ this.selectedDoc=this.docs[0].id; this.loadAssignment(); } },
       methods: {
         go(p) { location.href = p; },
         logout() { location.href = 'index.html'; },
-        
+        setRole(v){ localStorage.setItem('demoRole',v); },
         roleName(r){ return {creator:'任务创建者',annotator:'标注员',arbitrator:'裁定者'}[r]||r; },
-
+        persist(){ localStorage.setItem('memberD.users',JSON.stringify(this.users)); localStorage.setItem('memberD.assignments',JSON.stringify(this.assignments)); },
+        openUser(u){ this.userForm=u?{...u,roles:[...u.roles],originalAccount:u.account}:{account:'',name:'',roles:[],active:true,originalAccount:''}; this.userDialog=true; },
+        saveUser(){ const f=this.userForm; f.account=f.account.trim(); f.name=f.name.trim(); if(!f.account||!f.name||!f.roles.length)return this.$message.warning('请填写账号、姓名并选择角色'); if(!/^[A-Za-z0-9_-]+$/.test(f.account))return this.$message.warning('账号仅支持字母、数字、下划线和短横线'); if(!f.originalAccount&&this.users.some(u=>u.account===f.account))return this.$message.warning('账号已存在'); const u={account:f.account,name:f.name,roles:[...f.roles],active:f.active}; const i=this.users.findIndex(x=>x.account===f.account); if(i<0)this.users.push(u); else this.users.splice(i,1,u); this.cleanAssignments(); this.persist(); this.userDialog=false; this.$message.success('用户已保存'); },
+        toggleUser(u){ u.active=!u.active; this.cleanAssignments(); this.persist(); this.loadAssignment(); },
+        cleanAssignments(){ const validA=new Set(this.annotators.map(u=>u.account)),validR=new Set(this.arbitrators.map(u=>u.account)); for(const a of Object.values(this.assignments)){ a.annotators=(a.annotators||[]).filter(x=>validA.has(x)); a.arbitrators=(a.arbitrators||[]).filter(x=>validR.has(x)); } },
+        loadAssignment(){ const a=this.assignments[this.selectedDoc]||{annotators:[],arbitrators:[]}; this.assignForm={annotators:[...a.annotators],arbitrators:[...a.arbitrators]}; },
+        saveAssignment(){ if(!this.assignForm.annotators.length)return this.$message.warning('至少选择一名标注员'); if(!this.assignForm.arbitrators.length)return this.$message.warning('至少选择一名裁定者'); this.assignments[this.selectedDoc]={annotators:[...this.assignForm.annotators],arbitrators:[...this.assignForm.arbitrators]}; this.persist(); this.$message.success('人员分配已保存'); }
       }
     };
+    function load(key,fallback){ try{const x=JSON.parse(localStorage.getItem(key));return x&&typeof x==='object'?x:fallback;}catch{return fallback;} }
     createApp(App).use(ElementPlus).mount('#app');
   </script>
 </body>

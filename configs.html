@@ -23,7 +23,7 @@
       <div class="topbar">
         <div class="title">{{ pageTitle }}</div>
         <div class="right">
-          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色" @change="setRole">
             <el-option label="任务创建者" value="creator"></el-option>
             <el-option label="标注员" value="annotator"></el-option>
             <el-option label="裁定者" value="arbitrator"></el-option>
@@ -35,36 +35,56 @@
       <div class="content">
 
         <h2 class="page-title">配置中心</h2>
-        <p class="page-desc">管理标签体系（命题类型 + 关系类型）与指南版本</p>
+        <p class="page-desc">维护标签、关系和标注指南。已发布版本只读，调整请创建新草稿。</p>
         <div class="card">
-          <h3 style="margin-top:0">一级标签（命题性质）</h3>
-          <el-table :data="tags1" border style="width:100%">
-            <el-table-column prop="code" label="代码" width="80"></el-table-column>
-            <el-table-column prop="name" label="名称" width="160"></el-table-column>
-            <el-table-column prop="def" label="定义"></el-table-column>
-          </el-table>
-          <h3>二级标签（一般规范判断 GM 子类）</h3>
-          <el-table :data="tags2" border style="width:100%">
-            <el-table-column prop="code" label="代码" width="80"></el-table-column>
-            <el-table-column prop="name" label="名称" width="160"></el-table-column>
-            <el-table-column prop="def" label="定义"></el-table-column>
-          </el-table>
-          <h3>关系类型</h3>
-          <el-table :data="rels" border style="width:100%">
-            <el-table-column prop="code" label="代码" width="80"></el-table-column>
-            <el-table-column prop="name" label="名称" width="120"></el-table-column>
-            <el-table-column prop="expr" label="形式化表达" width="160"></el-table-column>
-            <el-table-column prop="def" label="逻辑含义"></el-table-column>
-          </el-table>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <el-select v-model="selectedId" style="width:280px" aria-label="选择指南版本" @change="persist">
+              <el-option v-for="v in versions" :key="v.id" :label="v.id+' · '+statusName(v.status)" :value="v.id"></el-option>
+            </el-select>
+            <el-button v-if="role==='creator'" type="primary" @click="createDraft">从当前版本新建草稿</el-button>
+            <el-tag v-if="selected" :type="selected.status==='current'?'success':selected.status==='draft'?'warning':'info'">{{ statusName(selected.status) }}</el-tag>
+          </div>
+          <el-alert title="标注任务使用创建时选定的指南版本；任务开始后不在原版本上改标签。新规则通过新版本发布。" type="info" :closable="false"></el-alert>
         </div>
-        <div class="card">
-          <h3 style="margin-top:0">指南版本管理</h3>
-          <el-timeline>
-            <el-timeline-item timestamp="2026-09-01" type="primary">v1.2 当前版本（新增 SM-C 合同子类、嵌套关系表达）</el-timeline-item>
-            <el-timeline-item timestamp="2026-04-14">v1.1 初始版本</el-timeline-item>
-          </el-timeline>
-          <span class="proto-note">标签体系支持动态调整，任务期间锁定（Q3/Q14）</span>
-        </div>
+        <template v-if="selected">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h3 style="margin-top:0">一级标签（命题性质）</h3><el-button v-if="editable" size="small" @click="openItem('tags1')">新增标签</el-button></div>
+            <el-table :data="selected.tags1" border style="width:100%">
+              <el-table-column prop="code" label="代码" width="90"></el-table-column><el-table-column prop="name" label="名称" width="170"></el-table-column><el-table-column prop="def" label="定义"></el-table-column>
+              <el-table-column v-if="editable" label="操作" width="120"><template #default="s"><el-button link type="primary" @click="openItem('tags1',s.row)">编辑</el-button><el-popconfirm title="确定删除？" @confirm="removeItem('tags1',s.row.code)"><template #reference><el-button link type="danger">删除</el-button></template></el-popconfirm></template></el-table-column>
+            </el-table>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:22px"><h3>二级标签（GM 子类）</h3><el-button v-if="editable" size="small" @click="openItem('tags2')">新增标签</el-button></div>
+            <el-table :data="selected.tags2" border style="width:100%">
+              <el-table-column prop="code" label="代码" width="90"></el-table-column><el-table-column prop="name" label="名称" width="170"></el-table-column><el-table-column prop="def" label="定义"></el-table-column>
+              <el-table-column v-if="editable" label="操作" width="120"><template #default="s"><el-button link type="primary" @click="openItem('tags2',s.row)">编辑</el-button><el-popconfirm title="确定删除？" @confirm="removeItem('tags2',s.row.code)"><template #reference><el-button link type="danger">删除</el-button></template></el-popconfirm></template></el-table-column>
+            </el-table>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:22px"><h3>关系类型</h3><el-button v-if="editable" size="small" @click="openItem('rels')">新增关系</el-button></div>
+            <el-table :data="selected.rels" border style="width:100%">
+              <el-table-column prop="code" label="代码" width="90"></el-table-column><el-table-column prop="name" label="名称" width="130"></el-table-column><el-table-column prop="expr" label="形式化表达" width="170"></el-table-column><el-table-column prop="def" label="逻辑含义"></el-table-column>
+              <el-table-column v-if="editable" label="操作" width="120"><template #default="s"><el-button link type="primary" @click="openItem('rels',s.row)">编辑</el-button><el-popconfirm title="确定删除？" @confirm="removeItem('rels',s.row.code)"><template #reference><el-button link type="danger">删除</el-button></template></el-popconfirm></template></el-table-column>
+            </el-table>
+          </div>
+          <div class="card">
+            <h3 style="margin-top:0">指南文件与版本</h3>
+            <el-descriptions :column="2" border>
+              <el-descriptions-item label="版本">{{ selected.id }}</el-descriptions-item>
+              <el-descriptions-item label="状态">{{ statusName(selected.status) }}</el-descriptions-item>
+              <el-descriptions-item label="创建日期">{{ selected.date }}</el-descriptions-item>
+              <el-descriptions-item label="指南附件">{{ selected.fileName || '尚未附文件' }}</el-descriptions-item>
+              <el-descriptions-item label="版本说明" :span="2">{{ selected.note || '—' }}</el-descriptions-item>
+            </el-descriptions>
+            <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+              <template v-if="editable"><el-button @click="$refs.guideInput.click()">从文件导入指南</el-button><input ref="guideInput" type="file" accept=".pdf,.docx,.txt,.md" hidden @change="importGuide"><el-button @click="editVersion=true">编辑版本信息</el-button><el-popconfirm title="发布后该版本不能再修改，确定发布？" @confirm="publish"><template #reference><el-button type="primary">发布此版本</el-button></template></el-popconfirm></template>
+              <a v-if="selected.fileData" :href="selected.fileData" :download="selected.fileName" style="font-size:14px;color:#409eff">下载指南附件</a>
+            </div>
+            <p style="font-size:13px;color:#909399">导出结果应记录所用指南版本；实际导出由结果输出页面负责。</p>
+          </div>
+        </template>
+        <el-dialog v-model="itemDialog" :title="itemForm.oldCode?'编辑':'新增'" width="520px">
+          <el-form label-width="90px"><el-form-item label="代码"><el-input v-model="itemForm.code" :disabled="!!itemForm.oldCode"></el-input></el-form-item><el-form-item label="名称"><el-input v-model="itemForm.name"></el-input></el-form-item><el-form-item v-if="itemKind==='rels'" label="表达式"><el-input v-model="itemForm.expr"></el-input></el-form-item><el-form-item label="定义"><el-input v-model="itemForm.def" type="textarea" :rows="3"></el-input></el-form-item></el-form>
+          <template #footer><el-button @click="itemDialog=false">取消</el-button><el-button type="primary" @click="saveItem">保存</el-button></template>
+        </el-dialog>
+        <el-dialog v-model="editVersion" title="编辑草稿信息" width="520px"><el-form v-if="selected" label-width="90px"><el-form-item label="版本号"><el-input v-model="versionForm.id" placeholder="如 v1.3"></el-input></el-form-item><el-form-item label="版本说明"><el-input v-model="versionForm.note" type="textarea" :rows="3"></el-input></el-form-item></el-form><template #footer><el-button @click="editVersion=false">取消</el-button><el-button type="primary" @click="saveVersionInfo">保存</el-button></template></el-dialog>
       </div>
     </div>
   </div>
@@ -76,41 +96,32 @@
       data() {
         return {
           pageTitle: '配置中心',
-          role: localStorage.getItem('demoRole') || 'annotator',
-          
-            tags1: [
-              { code:'SF', name:'个别事实判断', def:'关于案件中个别对象的事实判断，是规范适用的前提条件' },
-              { code:'GF', name:'一般事实判断', def:'为规范适用提供经验或背景支撑（社会常识、经验法则等）' },
-              { code:'SM', name:'个别规范判断', def:'体现法院对本案的规范性评价，通常作为结论出现' },
-              { code:'GM', name:'一般规范判断', def:'构成法律论证的规范基础，连接个案事实与裁判结论' },
-            ],
-            tags2: [
-              { code:'GM-L', name:'法律条文', def:'法源权威性规范文件的直接引用或转述' },
-              { code:'GM-I', name:'法律解释', def:'对法律条文含义、适用范围或条件的解释' },
-              { code:'GM-C', name:'合同及合同解释', def:'合同条款或对合同条款的规范性解释' },
-              { code:'GM-U', name:'习惯与行业惯例', def:'社会习惯、交易习惯或行业通行规则' },
-              { code:'GM-M', name:'道德与价值观念', def:'基于价值判断、公序良俗或基本原则' },
-              { code:'GM-O', name:'其他规范判断', def:'无法稳定归入上述类型的一般规范判断' },
-            ],
-            rels: [
-              { code:'S', name:'支持关系', expr:'S(pi, pj)', def:'pi 为 pj 的成立提供理由' },
-              { code:'A', name:'反对关系', expr:'A(po, pc)', def:'po 为 pc 的不成立提供理由' },
-              { code:'J', name:'组合关系', expr:'J(p1,…,pn)', def:'多个命题缺一不可的合取结构' },
-              { code:'M', name:'匹配关系', expr:'M(ps, pg)', def:'个别判断与一般判断的对应（要件-事实匹配）' },
-              { code:'I', name:'同一关系', expr:'I(p1,…,pn)', def:'多个命题语义上表达同一判断内容' },
-            ],
+          role: localStorage.getItem('demoRole') || 'creator',
+          versions: loadVersions(), selectedId: localStorage.getItem('memberD.selectedVersion') || 'v1.2',
+          itemDialog:false,itemKind:'',itemForm:{},editVersion:false,versionForm:{},
 
         };
       },
       computed: {
-        
+        selected(){ return this.versions.find(v=>v.id===this.selectedId) || this.versions[0]; },
+        editable(){ return this.role==='creator' && this.selected?.status==='draft'; }
       },
       methods: {
         go(p) { location.href = p; },
         logout() { location.href = 'index.html'; },
-        
+        setRole(v){ localStorage.setItem('demoRole',v); },
+        statusName(s){ return {current:'当前已发布',archived:'历史版本',draft:'未发布草稿'}[s]||s; },
+        persist(){ localStorage.setItem('memberD.versions',JSON.stringify(this.versions)); localStorage.setItem('memberD.selectedVersion',this.selectedId); },
+        createDraft(){ if(this.versions.some(v=>v.status==='draft'))return this.$message.warning('请先完成现有草稿'); const base=this.versions.find(v=>v.status==='current')||this.selected; const copy=JSON.parse(JSON.stringify(base)); copy.id='草稿-'+Date.now().toString(36); copy.status='draft'; copy.date=new Date().toISOString().slice(0,10); copy.note='基于 '+base.id+' 创建'; copy.fileName=''; copy.fileData=''; this.versions.unshift(copy); this.selectedId=copy.id; this.persist(); this.versionForm={id:copy.id,note:copy.note}; this.editVersion=true; },
+        openItem(kind,row){ if(!this.editable)return; this.itemKind=kind; this.itemForm=row?{...row,oldCode:row.code}:{code:'',name:'',def:'',expr:'',oldCode:''}; this.itemDialog=true; },
+        saveItem(){ const f=this.itemForm; if(!f.code.trim()||!f.name.trim()||!f.def.trim())return this.$message.warning('代码、名称和定义不能为空'); const list=this.selected[this.itemKind]; if(!f.oldCode&&list.some(x=>x.code===f.code.trim()))return this.$message.warning('代码已存在'); const next={code:f.code.trim(),name:f.name.trim(),def:f.def.trim()}; if(this.itemKind==='rels')next.expr=f.expr.trim(); const i=list.findIndex(x=>x.code===f.oldCode); if(i<0)list.push(next); else list.splice(i,1,next); this.persist(); this.itemDialog=false; },
+        removeItem(kind,code){ if(!this.editable)return; this.selected[kind]=this.selected[kind].filter(x=>x.code!==code); this.persist(); },
+        saveVersionInfo(){ if(!this.editable)return; const id=this.versionForm.id.trim(); if(!id)return this.$message.warning('请输入版本号'); if(id!==this.selected.id&&this.versions.some(v=>v.id===id))return this.$message.warning('版本号已存在'); this.selected.id=id; this.selected.note=this.versionForm.note.trim(); this.selectedId=id; this.persist(); this.editVersion=false; },
+        async importGuide(e){ const file=e.target.files?.[0]; if(!file)return; if(file.size>900000){this.$message.warning('离线演示附件请小于 900 KB');e.target.value='';return;} const target=this.selected; const reader=new FileReader(); reader.onload=()=>{target.fileName=file.name;target.fileData=reader.result;try{this.persist();this.$message.success('指南已导入草稿');}catch{target.fileData='';this.$message.error('浏览器存储空间不足');}}; reader.readAsDataURL(file); e.target.value=''; },
+        publish(){ if(!this.editable)return; if(this.selected.id.startsWith('草稿-'))return this.$message.warning('请先填写正式版本号'); for(const v of this.versions)if(v.status==='current')v.status='archived'; this.selected.status='current'; this.persist(); this.$message.success('新版本已发布'); }
       }
     };
+    function loadVersions(){ try{const x=JSON.parse(localStorage.getItem('memberD.versions'));if(Array.isArray(x)&&x.length)return x;}catch{} return [{id:'v1.2',status:'current',date:'2026-09-01',note:'仓库原型演示版本；与原始 v1.1 文档的差异待核对',fileName:'',fileData:'',tags1:[{code:'SF',name:'个别事实判断',def:'关于案件中个别对象的事实判断'},{code:'GF',name:'一般事实判断',def:'经验法则或背景事实判断'},{code:'SM',name:'个别规范判断',def:'针对本案的规范性评价或结论'},{code:'GM',name:'一般规范判断',def:'法律条文、合同、习惯等规范依据'}],tags2:[{code:'GM-L',name:'法律条文',def:'成文法规范的引用或转述'},{code:'GM-I',name:'法律解释',def:'对条文含义、条件或范围的解释'},{code:'GM-C',name:'合同及合同解释',def:'合同条款或其规范性解释'},{code:'GM-U',name:'习惯与行业惯例',def:'交易习惯或行业通行规则'},{code:'GM-M',name:'道德与价值观念',def:'公序良俗、公平等价值判断'},{code:'GM-O',name:'其他规范判断',def:'无法归入前述类型的规范判断'}],rels:[{code:'S',name:'支持',expr:'S(pi, pj)',def:'pi 为 pj 提供理由'},{code:'A',name:'反对',expr:'A(po, pc)',def:'po 为 pc 的不成立提供理由'},{code:'J',name:'组合',expr:'J(p1,…,pn)',def:'多个命题缺一不可'},{code:'M',name:'匹配',expr:'M(ps, pg)',def:'个别判断与一般判断对应'},{code:'I',name:'同一',expr:'I(p1,…,pn)',def:'多个命题表达同一判断'}]}]; }
     createApp(App).use(ElementPlus).mount('#app');
   </script>
 </body>

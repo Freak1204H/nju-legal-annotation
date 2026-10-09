@@ -23,7 +23,7 @@
       <div class="topbar">
         <div class="title">{{ pageTitle }}</div>
         <div class="right">
-          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色">
+          <el-select v-model="role" size="small" style="width:130px" placeholder="切换角色" @change="setRole">
             <el-option label="任务创建者" value="creator"></el-option>
             <el-option label="标注员" value="annotator"></el-option>
             <el-option label="裁定者" value="arbitrator"></el-option>
@@ -35,31 +35,101 @@
       <div class="content">
 
         <h2 class="page-title">文书总库</h2>
-        <p class="page-desc">管理待标注的裁判文书（支持 PDF / 纯文本 / Word）</p>
-        <div class="card">
-          <div style="margin-bottom:12px">
-            <el-button type="primary">批量上传文书</el-button>
-            <el-button>单文件导入</el-button>
-            <el-button>手动录入</el-button>
+        <p class="page-desc">准备案例文本，校正裁判理由，并建立教学用标准样例。</p>
+        <el-tabs v-model="view" @tab-change="changeView">
+          <el-tab-pane label="文书管理" name="docs"></el-tab-pane>
+          <el-tab-pane label="教师标准样例" name="samples"></el-tab-pane>
+          <el-tab-pane label="学生练习" name="practice"></el-tab-pane>
+        </el-tabs>
+
+        <div v-if="view==='docs'" class="card">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+            <el-button v-if="canManage" type="primary" @click="$refs.batchInput.click()">批量导入</el-button>
+            <input ref="batchInput" type="file" accept=".pdf,.doc,.docx,.txt,text/plain" multiple hidden @change="importFiles">
+            <el-select v-model="batchType" style="width:135px" aria-label="批量导入案例类型">
+              <el-option v-for="t in caseTypes" :key="t" :label="t" :value="t"></el-option>
+            </el-select>
+            <el-button v-if="canManage" @click="openDoc()">单文件／手动录入</el-button>
             <el-tag size="small">已导入 {{ docs.length }} 份</el-tag>
           </div>
+          <el-alert title="离线原型：TXT 可读取正文并辅助提取；PDF、Word 先登记文件信息，正文及裁判理由由人工粘贴校正。" type="info" :closable="false" style="margin-bottom:14px"></el-alert>
           <el-table :data="docs" border style="width:100%">
-            <el-table-column prop="name" label="文书名称" min-width="240"></el-table-column>
-            <el-table-column prop="type" label="案例类型" width="120"></el-table-column>
-            <el-table-column prop="caseNo" label="案号" width="180"></el-table-column>
-            <el-table-column prop="court" label="审理法院" min-width="180"></el-table-column>
-            <el-table-column prop="status" label="状态" width="100">
-              <template #default="s"><el-tag size="small" :type="s.row.status==='已提取'?'success':'info'">{{ s.row.status }}</el-tag></template>
-            </el-table-column>
-            <el-table-column label="操作" width="160">
-              <template #default="s">
-                <el-button size="small" type="text">提取裁判理由</el-button>
-                <el-button size="small" type="text">删除</el-button>
-              </template>
-            </el-table-column>
+            <el-table-column prop="name" label="文书名称" min-width="220"></el-table-column>
+            <el-table-column prop="type" label="案例类型" width="115"></el-table-column>
+            <el-table-column prop="caseNo" label="案号" min-width="165"></el-table-column>
+            <el-table-column prop="court" label="审理法院" min-width="160"></el-table-column>
+            <el-table-column label="裁判理由" width="100"><template #default="s"><el-tag size="small" :type="s.row.reason?'success':'info'">{{ s.row.reason?'已校正':'待处理' }}</el-tag></template></el-table-column>
+            <el-table-column label="操作" min-width="205"><template #default="s">
+              <el-button v-if="canManage" link type="primary" @click="openReason(s.row)">提取／校正</el-button>
+              <el-button v-if="canManage" link @click="openDoc(s.row)">编辑</el-button>
+              <el-popconfirm v-if="canManage" title="确定删除这份文书？" @confirm="removeDoc(s.row.id)"><template #reference><el-button link type="danger">删除</el-button></template></el-popconfirm>
+            </template></el-table-column>
           </el-table>
-          <span class="proto-note gap">需求3（教师教学）：教师标准样例库 / 学生练习入口尚未在本页体现</span>
         </div>
+
+        <div v-if="view==='samples'" class="card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+            <el-button v-if="canManage" type="primary" @click="openSample()">新增标准样例</el-button>
+            <span style="color:#606266;font-size:13px">已准备 {{ samples.length }} / 10 个教学样例（10 个为需求中的目标数量）</span>
+          </div>
+          <el-table :data="samples" border style="width:100%">
+            <el-table-column prop="title" label="样例名称" min-width="190"></el-table-column>
+            <el-table-column label="关联文书" min-width="250"><template #default="s">{{ docName(s.row.docId) }}</template></el-table-column>
+            <el-table-column label="标准命题数" width="115"><template #default="s">{{ lines(s.row.answer).length }}</template></el-table-column>
+            <el-table-column v-if="canManage" label="操作" width="150"><template #default="s"><el-button link type="primary" @click="openSample(s.row)">编辑标准答案</el-button><el-popconfirm title="确定删除该样例？" @confirm="removeSample(s.row.id)"><template #reference><el-button link type="danger">删除</el-button></template></el-popconfirm></template></el-table-column>
+          </el-table>
+          <p style="font-size:13px;color:#909399">教师将命题原文及标签逐行写入标准答案，学生练习时不会提前看到答案。</p>
+          <el-link type="primary" href="documents.html?view=practice">打开学生独立练习入口 →</el-link>
+        </div>
+
+        <div v-if="view==='practice'" class="card">
+          <h3 style="margin-top:0">独立练习</h3>
+          <el-select v-model="practiceId" placeholder="选择教师样例" style="width:min(100%,400px);margin-bottom:16px" @change="resetPractice">
+            <el-option v-for="s in samples" :key="s.id" :label="s.title" :value="s.id"></el-option>
+          </el-select>
+          <template v-if="currentSample">
+            <p><strong>案例：</strong>{{ docName(currentSample.docId) }}</p>
+            <el-input :model-value="sampleReason" type="textarea" :rows="7" readonly aria-label="练习文本"></el-input>
+            <p style="font-size:13px;color:#606266">请逐行填写“命题原文｜一级标签｜二级标签（可选）”，与教师标准答案使用相同格式。</p>
+            <el-input v-model="practiceAnswer" type="textarea" :rows="6" placeholder="每行一条命题标注" aria-label="学生标注结果"></el-input>
+            <div style="margin-top:12px"><el-button type="primary" @click="comparePractice">提交并比对</el-button></div>
+            <el-alert v-if="comparison" :title="'与标准答案完全相同：' + comparison.matches + ' / ' + comparison.total + ' 条'" :type="comparison.matches===comparison.total?'success':'warning'" :closable="false" style="margin-top:16px"></el-alert>
+            <el-table v-if="comparison" :data="comparison.rows" border style="width:100%;margin-top:12px">
+              <el-table-column prop="index" label="序号" width="70"></el-table-column>
+              <el-table-column prop="mine" label="我的标注" min-width="220"></el-table-column>
+              <el-table-column prop="standard" label="教师标准" min-width="220"></el-table-column>
+              <el-table-column label="结果" width="85"><template #default="s"><el-tag :type="s.row.same?'success':'danger'">{{ s.row.same?'一致':'不同' }}</el-tag></template></el-table-column>
+            </el-table>
+          </template>
+          <el-empty v-else description="请先由教师建立标准样例"></el-empty>
+        </div>
+
+        <el-dialog v-model="docDialog" :title="docForm.id?'编辑文书':'录入文书'" width="620px">
+          <el-form label-width="90px">
+            <el-form-item label="选择文件"><input type="file" accept=".pdf,.doc,.docx,.txt,text/plain" @change="selectSingleFile"></el-form-item>
+            <el-form-item label="文书名称"><el-input v-model="docForm.name" placeholder="可自定义名称"></el-input></el-form-item>
+            <el-form-item label="案例类型"><el-select v-model="docForm.type" style="width:100%"><el-option v-for="t in caseTypes" :key="t" :label="t" :value="t"></el-option></el-select></el-form-item>
+            <el-form-item label="案号"><el-input v-model="docForm.caseNo"></el-input></el-form-item>
+            <el-form-item label="审理法院"><el-input v-model="docForm.court"></el-input></el-form-item>
+            <el-form-item label="原文"><el-input v-model="docForm.text" type="textarea" :rows="6" placeholder="可以粘贴裁判文书全文或裁判理由"></el-input></el-form-item>
+          </el-form>
+          <template #footer><el-button @click="docDialog=false">取消</el-button><el-button type="primary" @click="saveDoc">保存</el-button></template>
+        </el-dialog>
+        <el-dialog v-model="reasonDialog" title="提取并校正裁判理由" width="700px">
+          <p style="font-size:13px;color:#606266">{{ reasonForm.name }}。可修改原文，再尝试规则提取；最终以人工校正后的内容为准。</p>
+          <el-input v-model="reasonForm.text" type="textarea" :rows="6" placeholder="粘贴文书原文"></el-input>
+          <div style="margin:10px 0"><el-button @click="extractReason">按关键词提取</el-button></div>
+          <el-input v-model="reasonForm.reason" type="textarea" :rows="6" placeholder="在此人工校正裁判理由"></el-input>
+          <template #footer><el-button @click="reasonDialog=false">取消</el-button><el-button type="primary" @click="saveReason">保存校正结果</el-button></template>
+        </el-dialog>
+        <el-dialog v-model="sampleDialog" :title="sampleForm.id?'编辑标准样例':'新增标准样例'" width="670px">
+          <el-form label-width="100px">
+            <el-form-item label="样例名称"><el-input v-model="sampleForm.title"></el-input></el-form-item>
+            <el-form-item label="关联文书"><el-select v-model="sampleForm.docId" style="width:100%"><el-option v-for="d in docs" :key="d.id" :label="d.name" :value="d.id"></el-option></el-select></el-form-item>
+            <el-form-item label="标准答案"><el-input v-model="sampleForm.answer" type="textarea" :rows="8" placeholder="一行一条：命题原文｜SF"></el-input></el-form-item>
+          </el-form>
+          <template #footer><el-button @click="sampleDialog=false">取消</el-button><el-button type="primary" @click="saveSample">保存样例</el-button></template>
+        </el-dialog>
       </div>
     </div>
   </div>
@@ -71,25 +141,49 @@
       data() {
         return {
           pageTitle: '文书总库',
-          role: localStorage.getItem('demoRole') || 'annotator',
-          
-            docs: [
-              { name: '余某、徐某劳务合同纠纷一审判决书', type: '普通案例', caseNo: '(2023)苏0106民初18909号', court: '南京市鼓楼区人民法院', status: '已提取' },
-              { name: '上海中原物业诉陶德华居间合同纠纷案', type: '指导性案例', caseNo: '指导案例1号', court: '最高人民法院', status: '已提取' },
-              { name: '华阴市某合作社诉某服务中心租赁合同纠纷案', type: '参考案例', caseNo: '2025-07-2-111-002', court: '陕西省华阴市人民法院', status: '未提取' },
-            ],
+          role: localStorage.getItem('demoRole') || 'creator',
+          view: new URLSearchParams(location.search).get('view') || 'docs',
+          caseTypes: ['普通案例','指导性案例','参考案例'], batchType: '普通案例',
+          docs: load('memberD.docs', [
+            {id:'d1',name:'余某、徐某劳务合同纠纷一审判决书',type:'普通案例',caseNo:'(2023)苏0106民初18909号',court:'南京市鼓楼区人民法院',text:'',reason:''},
+            {id:'d2',name:'上海中原物业诉陶德华居间合同纠纷案',type:'指导性案例',caseNo:'指导案例1号',court:'最高人民法院',text:'',reason:''}
+          ]),
+          samples: load('memberD.samples', []),
+          docDialog:false, docForm:{}, reasonDialog:false, reasonForm:{},
+          sampleDialog:false, sampleForm:{}, practiceId:'', practiceAnswer:'', comparison:null,
 
         };
       },
       computed: {
-        
+        canManage(){ return this.role==='creator'; },
+        currentSample(){ return this.samples.find(s=>s.id===this.practiceId); },
+        sampleReason(){ const d=this.docs.find(x=>x.id===this.currentSample?.docId); return d?.reason || d?.text || '该样例尚无练习文本'; }
       },
       methods: {
         go(p) { location.href = p; },
         logout() { location.href = 'index.html'; },
-        
+        setRole(v){ localStorage.setItem('demoRole',v); },
+        changeView(v){ history.replaceState(null,'','documents.html?view='+v); if(v==='practice'&&!this.practiceId) this.practiceId=this.samples[0]?.id||''; },
+        persist(){ localStorage.setItem('memberD.docs',JSON.stringify(this.docs)); localStorage.setItem('memberD.samples',JSON.stringify(this.samples)); },
+        lines(v){ return (v||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean); },
+        docName(id){ return this.docs.find(d=>d.id===id)?.name || '文书已删除'; },
+        openDoc(d){ this.docForm=d?{...d}:{id:'',name:'',type:'普通案例',caseNo:'',court:'',text:'',reason:''}; this.docDialog=true; },
+        saveDoc(){ if(!this.docForm.name.trim()) return this.$message.warning('请填写文书名称'); const d={...this.docForm,name:this.docForm.name.trim(),id:this.docForm.id||uid()}; const i=this.docs.findIndex(x=>x.id===d.id); if(i<0)this.docs.push(d); else this.docs.splice(i,1,d); this.persist(); this.docDialog=false; this.$message.success('文书已保存'); },
+        removeDoc(id){ this.docs=this.docs.filter(d=>d.id!==id); this.samples=this.samples.filter(s=>s.docId!==id); this.persist(); },
+        async importFiles(e){ const files=Array.from(e.target.files||[]); let count=0; for(const f of files){ const ext=f.name.split('.').pop().toLowerCase(); if(!['txt','pdf','doc','docx'].includes(ext)){ this.$message.warning('不支持 '+f.name); continue; } const text=ext==='txt'?(await f.text()).slice(0,200000):''; this.docs.push({id:uid(),name:f.name.replace(/\.[^.]+$/,''),type:this.batchType,caseNo:'',court:'',text,reason:'',fileName:f.name}); count++; } if(count){this.persist();this.$message.success('已登记 '+count+' 份文书');} e.target.value=''; },
+        async selectSingleFile(e){ const f=e.target.files?.[0]; if(!f)return; const ext=f.name.split('.').pop().toLowerCase(); if(!['txt','pdf','doc','docx'].includes(ext))return this.$message.warning('仅支持 PDF、Word、TXT'); this.docForm.name=f.name.replace(/\.[^.]+$/,''); this.docForm.fileName=f.name; if(ext==='txt')this.docForm.text=(await f.text()).slice(0,200000); },
+        openReason(d){ this.reasonForm={...d}; this.reasonDialog=true; },
+        extractReason(){ const t=this.reasonForm.text||''; if(!t.trim())return this.$message.warning('请先粘贴原文'); const match=/(?:裁判理由|本院认为|法院认为)[：:\s]*/.exec(t); if(!match)return this.$message.warning('未识别关键词，请手动选取'); let result=t.slice(match.index+match[0].length); const end=/(?:判决如下|裁判结果|综上，判决)/.exec(result); if(end)result=result.slice(0,end.index); this.reasonForm.reason=result.trim(); this.$message.info('已按关键词截取，请核对边界'); },
+        saveReason(){ if(!this.reasonForm.reason.trim())return this.$message.warning('请填写裁判理由'); const i=this.docs.findIndex(d=>d.id===this.reasonForm.id); if(i>=0){this.docs.splice(i,1,{...this.reasonForm});this.persist();} this.reasonDialog=false; this.$message.success('校正结果已保存'); },
+        openSample(s){ this.sampleForm=s?{...s}:{id:'',title:'',docId:this.docs[0]?.id||'',answer:''}; this.sampleDialog=true; },
+        saveSample(){ if(!this.sampleForm.title.trim()||!this.sampleForm.docId||!this.lines(this.sampleForm.answer).length)return this.$message.warning('请填写样例名称、文书及标准答案'); const s={...this.sampleForm,title:this.sampleForm.title.trim(),id:this.sampleForm.id||uid()}; const i=this.samples.findIndex(x=>x.id===s.id); if(i<0)this.samples.push(s); else this.samples.splice(i,1,s); this.persist(); this.sampleDialog=false; this.$message.success('标准样例已保存'); },
+        removeSample(id){ this.samples=this.samples.filter(s=>s.id!==id); if(this.practiceId===id)this.practiceId=''; this.persist(); },
+        resetPractice(){ this.practiceAnswer=''; this.comparison=null; },
+        comparePractice(){ const standard=this.lines(this.currentSample?.answer); const mine=this.lines(this.practiceAnswer); if(!mine.length)return this.$message.warning('请先填写标注结果'); const rows=Array.from({length:Math.max(standard.length,mine.length)},(_,i)=>({index:i+1,mine:mine[i]||'（缺失）',standard:standard[i]||'（无）',same:mine[i]===standard[i]})); this.comparison={rows,matches:rows.filter(r=>r.same).length,total:rows.length}; }
       }
     };
+    function load(key,fallback){ try{const x=JSON.parse(localStorage.getItem(key));return Array.isArray(x)?x:fallback;}catch{return fallback;} }
+    function uid(){ return 'd'+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
     createApp(App).use(ElementPlus).mount('#app');
   </script>
 </body>
