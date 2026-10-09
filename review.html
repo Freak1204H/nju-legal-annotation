@@ -6,6 +6,7 @@
   <title>冲突解决 - 裁判文书标注平台</title>
   <link rel="stylesheet" href="assets/vendor/element-plus.css" />
   <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/member-c.css" />
 </head>
 <body>
   <div id="app">
@@ -33,61 +34,12 @@
         </div>
       </div>
       <div class="content">
-
-        <h2 class="page-title">冲突解决</h2>
-        <p class="page-desc">裁定者并排对比多名标注员结果，识别差异并裁定最终版本</p>
-        <div class="card">
-          <el-table :data="diffs" border style="width:100%">
-            <el-table-column prop="item" label="争议点" width="140"></el-table-column>
-            <el-table-column prop="a" label="标注员 A" min-width="180"></el-table-column>
-            <el-table-column prop="b" label="标注员 B" min-width="180"></el-table-column>
-            <el-table-column label="裁定" width="220">
-              <template #default="s">
-                <el-radio-group v-model="s.row.pick" size="small">
-                  <el-radio-button label="A">采纳A</el-radio-button>
-                  <el-radio-button label="B">采纳B</el-radio-button>
-                  <el-radio-button label="R">重标</el-radio-button>
-                </el-radio-group>
-              </template>
-            </el-table-column>
-          </el-table>
-          <div style="margin-top:12px">
-            <el-button type="success">提交最终版本</el-button>
-            <el-button @click="go('compare.html')">查看差异比对</el-button>
-            <span class="proto-note">不一致且需线下讨论的可「提交专家裁决」（Q13）</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+        <member-c-workspace ref="workspace" page="review" :role="role"></member-c-workspace>
+      </div></div></div></div>
   <script src="assets/vendor/vue.global.prod.js"></script>
   <script src="assets/vendor/element-plus.full.min.js"></script>
-  <script>
-    const { createApp } = Vue;
-    const App = {
-      data() {
-        return {
-          pageTitle: '冲突解决',
-          role: localStorage.getItem('demoRole') || 'annotator',
-          
-            diffs: [
-              { item:'命题 P5 标签', a:'SF 个别事实判断', b:'GM 一般规范判断', pick:'A' },
-              { item:'关系缺失', a:'S(4,6)', b:'（未标注）', pick:'A' },
-              { item:'命题边界', a:'被告应…支付该11000元。', b:'被告应向原告支付该11000元。', pick:'B' },
-            ],
-
-        };
-      },
-      computed: {
-        
-      },
-      methods: {
-        go(p) { location.href = p; },
-        logout() { location.href = 'index.html'; },
-        
-      }
-    };
-    createApp(App).use(ElementPlus).mount('#app');
-  </script>
-</body>
-</html>
+  <script src="assets/vendor/jszip.min.js"></script>
+  <script src="assets/member-c-core.js"></script>
+  <script src="assets/member-c-export.js"></script>
+  <script src="assets/member-c-ui.js"></script>
+</body></html>
