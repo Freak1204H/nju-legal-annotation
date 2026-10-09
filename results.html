@@ -6,6 +6,7 @@
   <title>结果输出 - 裁判文书标注平台</title>
   <link rel="stylesheet" href="assets/vendor/element-plus.css" />
   <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/member-c.css" />
 </head>
 <body>
   <div id="app">
@@ -33,66 +34,12 @@
         </div>
       </div>
       <div class="content">
-
-        <h2 class="page-title">结果输出</h2>
-        <p class="page-desc">导出标注数据与论证图示（JSON / Excel / PNG / SVG），导出后不可修改</p>
-        <div class="card">
-          <h3 style="margin-top:0">导出内容</h3>
-          <el-checkbox-group v-model="formats">
-            <el-checkbox label="JSON">JSON 标注数据（供模型训练，含字符索引+标签层级+关系）</el-checkbox><br/>
-            <el-checkbox label="Excel">Excel 标注数据（命题列表+标签+关系矩阵）</el-checkbox><br/>
-            <el-checkbox label="PNG">论证图示 PNG</el-checkbox>
-            <el-checkbox label="SVG">论证图示 SVG</el-checkbox>
-          </el-checkbox-group>
-          <div style="margin-top:12px">
-            <el-checkbox v-model="withGuide">附带标注指南文档（版本 v1.2）</el-checkbox>
-          </div>
-          <div style="margin-top:16px"><el-button type="primary" @click="exportData">导出（生成压缩包）</el-button></div>
-          <span class="proto-note">进入结果输出后流程不可回退，导出数据只读（需求 5.2）</span>
-        </div>
-        <div class="card">
-          <h3 style="margin-top:0">导出记录</h3>
-          <el-table :data="records" border style="width:100%">
-            <el-table-column prop="time" label="导出时间" width="180"></el-table-column>
-            <el-table-column prop="who" label="操作人" width="120"></el-table-column>
-            <el-table-column prop="task" label="任务" min-width="200"></el-table-column>
-            <el-table-column prop="ver" label="指南版本" width="100"></el-table-column>
-            <el-table-column prop="file" label="文件名" min-width="180"></el-table-column>
-          </el-table>
-        </div>
-      </div>
-    </div>
-  </div>
+        <member-c-workspace ref="workspace" page="results" :role="role"></member-c-workspace>
+      </div></div></div></div>
   <script src="assets/vendor/vue.global.prod.js"></script>
   <script src="assets/vendor/element-plus.full.min.js"></script>
-  <script>
-    const { createApp } = Vue;
-    const App = {
-      data() {
-        return {
-          pageTitle: '结果输出',
-          role: localStorage.getItem('demoRole') || 'annotator',
-          
-            formats: ['JSON','Excel'],
-            withGuide: true,
-            records: [
-              { time:'2026-10-05 14:30', who:'张老师', task:'租赁合同纠纷类案标注', ver:'v1.2', file:'results_租赁合同.zip' },
-            ],
-
-        };
-      },
-      computed: {
-        
-      },
-      methods: {
-        go(p) { location.href = p; },
-        logout() { location.href = 'index.html'; },
-        
-        exportData(){ this.$message.success('已生成压缩包（演示）'); },
-
-      }
-    };
-    createApp(App).use(ElementPlus).mount('#app');
-  </script>
-</body>
-</html>
+  <script src="assets/vendor/jszip.min.js"></script>
+  <script src="assets/member-c-core.js"></script>
+  <script src="assets/member-c-export.js"></script>
+  <script src="assets/member-c-ui.js"></script>
+</body></html>
